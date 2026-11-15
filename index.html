@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orientation Craft – Escape Game</title>
+<meta name="author" content="Marie Frison, Lycée Jean Hanzelet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --grass:#5d9c3a; --grass-d:#3f7425; --dirt:#8a5a35; --dirt-d:#6b4325;
+  --stone:#7d7d7d; --wood:#a8803f; --wood-d:#7a5a2a;
+  --iron:#d8d8d8; --diamond:#4fe3e0; --gold:#f5c542; --red:#d23b3b;
+  --ink:#1d1d1d; --panel:#c6c6c6; --panel-d:#555; --panel-l:#fff; --sky:#7fb8ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:'VT323',monospace;font-size:22px;color:var(--ink);
+  background:linear-gradient(var(--sky),#b9dcff 60%,var(--grass) 60%,var(--grass) 62%,var(--dirt) 62%);
+  background-attachment:fixed;min-height:100vh}
+h1,h2,h3,.px{font-family:'Press Start 2P',monospace;font-weight:normal;line-height:1.5}
+h3{font-size:13px}
+.wrap{max-width:980px;margin:0 auto;padding:18px 14px 80px}
+.panel{background:var(--panel);padding:20px;margin:16px 0;border:4px solid #000;
+  box-shadow:inset 4px 4px 0 var(--panel-l),inset -4px -4px 0 var(--panel-d)}
+.dark{background:#2b2b2b;color:#eee;box-shadow:inset 4px 4px 0 #555,inset -4px -4px 0 #111}
+.btn{font-family:'Press Start 2P',monospace;font-size:12px;cursor:pointer;padding:12px 16px;margin:4px;color:#fff;background:#6f6f6f;
+  border:3px solid #000;box-shadow:inset 3px 3px 0 #aaa,inset -3px -3px 0 #3a3a3a;text-shadow:2px 2px 0 #333}
+.btn:hover{background:#7f8fc8;box-shadow:inset 3px 3px 0 #b8c4f0,inset -3px -3px 0 #3d4a85}
+.btn:active{transform:translateY(2px)}
+.btn.green{background:#4f8c2f;box-shadow:inset 3px 3px 0 #8fd16a,inset -3px -3px 0 #2c5a14}
+.btn.gold{background:#c99a20;box-shadow:inset 3px 3px 0 #ffe17a,inset -3px -3px 0 #7c5c0c}
+.btn.sel{background:#2f6fb8;box-shadow:inset 3px 3px 0 #82b8ff,inset -3px -3px 0 #143e70}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.txt{font-family:'VT323';font-size:22px;text-shadow:none;padding:6px 12px;text-align:left}
+.title{text-align:center;color:#fff;font-size:30px;margin:10px 0 0;text-shadow:4px 4px 0 #3a3a3a,-2px -2px 0 #000;letter-spacing:2px}
+.subtitle{text-align:center;color:#ffef7a;font-family:'Press Start 2P';font-size:11px;text-shadow:2px 2px 0 #333;margin:14px 0 6px;line-height:1.8}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.card{cursor:pointer;text-align:center;padding:14px;border:4px solid #000;background:#ddd;box-shadow:inset 4px 4px 0 #fff,inset -4px -4px 0 #777}
+.card:hover{background:#eaeaea}
+.card.sel{outline:5px solid var(--gold);background:#fff6d0}
+.card h3{font-size:11px;margin:10px 0}
+.card .ico{font-size:40px}
+.block{width:56px;height:56px;margin:0 auto;border:3px solid #000}
+.b-wood{background:repeating-linear-gradient(0deg,var(--wood) 0 10px,var(--wood-d) 10px 13px)}
+.b-iron{background:linear-gradient(135deg,#fff 0 20%,var(--iron) 20% 60%,#9a9a9a 60%)}
+.b-diam{background:radial-gradient(circle at 30% 30%,var(--diamond) 0 6px,transparent 7px),radial-gradient(circle at 70% 60%,var(--diamond) 0 6px,transparent 7px),radial-gradient(circle at 40% 78%,#bffffd 0 4px,transparent 5px),var(--stone)}
+input[type=text],textarea{font-family:'VT323';font-size:24px;padding:8px 12px;border:3px solid #000;background:#111;color:#7CFC00;width:100%;max-width:420px}
+textarea{max-width:100%;min-height:80px}
+.hud{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:rgba(30,30,30,.93);color:#fff;padding:10px 14px;border:3px solid #000;margin-bottom:10px}
+.hud .px{font-size:10px}
+.hearts{display:flex;gap:3px;flex-wrap:wrap;max-width:240px}
+.heart{width:20px;height:18px;display:inline-block;background:
+ linear-gradient(var(--red),var(--red)) 3px 0/5px 3px no-repeat,linear-gradient(var(--red),var(--red)) 12px 0/5px 3px no-repeat,
+ linear-gradient(var(--red),var(--red)) 0 3px/20px 6px no-repeat,linear-gradient(var(--red),var(--red)) 3px 9px/14px 3px no-repeat,
+ linear-gradient(var(--red),var(--red)) 6px 12px/8px 3px no-repeat,linear-gradient(var(--red),var(--red)) 9px 15px/2px 3px no-repeat}
+.heart.off{filter:grayscale(1) brightness(.45)}
+.slots{display:flex;gap:3px;flex-wrap:wrap}
+.slot{width:32px;height:32px;border:3px solid #000;background:#8b8b8b;box-shadow:inset 2px 2px 0 #444;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P';font-size:12px;color:var(--gold);text-shadow:2px 2px 0 #000}
+.slot.got{background:#3d3d3d}
+.biome{color:#fff;padding:22px;border:4px solid #000;text-shadow:2px 2px 0 #000}
+.biome h2{font-size:15px;margin:0 0 10px}
+.bio-a{background:repeating-linear-gradient(45deg,#555 0 18px,#666 18px 36px)}
+.bio-b{background:repeating-linear-gradient(90deg,#4a4a4a 0 24px,#5c5c5c 24px 48px)}
+.bio-c{background:repeating-linear-gradient(0deg,#8b2d14 0 14px,#c9501d 14px 20px,#8b2d14 20px 34px)}
+.bio-d{background:repeating-linear-gradient(90deg,var(--wood) 0 40px,var(--wood-d) 40px 44px)}
+.bio-e{background:repeating-linear-gradient(45deg,#2d6a4f 0 20px,#40916c 20px 40px)}
+.bio-f{background:repeating-linear-gradient(45deg,#3b2a5a 0 20px,#4c3a70 20px 40px)}
+.bio-g{background:repeating-linear-gradient(0deg,#1f4e79 0 16px,#2a6aa3 16px 32px)}
+.bio-h{background:repeating-linear-gradient(135deg,#7a6a2a 0 18px,#958236 18px 36px)}
+.bio-i{background:repeating-linear-gradient(90deg,#5b2333 0 22px,#7a2f45 22px 44px)}
+.bio-j{background:repeating-linear-gradient(45deg,#24564f 0 18px,#2f7066 18px 36px)}
+.bio-k{background:repeating-linear-gradient(0deg,#d9d2b6 0 14px,#c4bb98 14px 28px);color:#222;text-shadow:none}
+.item{background:#e9e9e9;border:3px solid #000;padding:10px 12px;margin:10px 0;box-shadow:inset 3px 3px 0 #fff,inset -3px -3px 0 #999}
+.item.bad{background:#ffd0d0;border-color:var(--red)}
+.item .q{margin-bottom:6px}
+.who{display:inline-block;background:#2f6fb8;color:#fff;font-family:'Press Start 2P';font-size:9px;padding:3px 6px;margin-right:6px;vertical-align:middle}
+.who.p2{background:#b8452f}
+select{font-family:'VT323';font-size:22px;padding:4px 6px;border:3px solid #000;background:#fff;max-width:100%}
+.opts{display:flex;flex-wrap:wrap}
+.order-row{display:flex;align-items:center;gap:8px}
+.order-row .num{font-family:'Press Start 2P';font-size:12px;min-width:34px}
+.order-row .txt{flex:1}
+.mini{padding:6px 10px;font-size:10px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tag{background:#333;color:#fff;padding:2px 8px;border:2px solid #000}
+.msg{min-height:30px;font-size:24px;margin-top:10px}
+.msg.err{color:#a00}.msg.ok{color:#1f6b0f}
+.hint{background:#fff6c2;border:3px dashed #a88700;padding:10px;margin-top:10px}
+.scroll{background:#f3e7c4;border:4px solid #000;padding:16px 20px;box-shadow:inset 4px 4px 0 #fff8e0,inset -4px -4px 0 #b39a5c}
+.scroll h3{margin-top:0}
+.scroll ul{margin:6px 0 6px 0;padding-left:22px}
+.scroll li{margin:4px 0}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:8px}
+.info-card{background:#fffaf0;border:3px solid #000;padding:10px}
+.info-card b{display:block;font-family:'Press Start 2P';font-size:10px;margin-bottom:6px;line-height:1.6}
+.mission{background:#1e3a5f;color:#fff;border:4px solid #000;padding:14px;margin-top:12px}
+.mission b{color:#ffe17a}
+.defi{background:#4a2a5a;color:#fff;border:4px solid #000;padding:14px;margin-top:12px}
+.defi b{color:#ffb3f0}
+.center{text-align:center}
+.hidden{display:none!important}
+.big-letter{font-family:'Press Start 2P';font-size:54px;color:var(--gold);text-shadow:5px 5px 0 #000;margin:14px}
+.chest{width:120px;height:96px;margin:10px auto;border:4px solid #000;position:relative;background:linear-gradient(var(--wood-d) 0 34%,#000 34% 38%,var(--wood) 38%)}
+.chest::after{content:"";position:absolute;left:50%;top:28%;width:18px;height:22px;margin-left:-9px;background:var(--gold);border:3px solid #000}
+.map{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:10px 0}
+.map .stage{padding:7px 9px;border:3px solid #000;background:#888;color:#fff;font-family:'Press Start 2P';font-size:8px;line-height:1.5}
+.map .stage.done{background:#4f8c2f}.map .stage.cur{background:#c99a20}
+table{border-collapse:collapse;width:100%;font-size:20px;margin:6px 0}
+td,th{border:2px solid #000;padding:4px 8px;text-align:left;vertical-align:top}
+th{background:#333;color:#fff}
+.small{font-size:19px}
+a{color:#1a4fa0}
+.dark a{color:#9cc8ff}
+.step{font-family:'Press Start 2P';font-size:10px;color:#555;margin-bottom:6px}
+.res{background:#fff;border:3px solid #000;padding:12px;margin:8px 0}
+@media (max-width:600px){.title{font-size:18px}.big-letter{font-size:40px}body{font-size:20px}}
+
+.world{color:#fff;border:4px solid #000;padding:14px;text-shadow:2px 2px 0 #000}
+.world h3{font-size:13px;margin:8px 0 4px}
+.world .wstat{font-family:'Press Start 2P';font-size:10px;margin:10px 0;color:#ffe17a}
+.world input{margin-top:6px}
+.bar{display:grid;grid-template-columns:220px 1fr 60px;gap:8px;align-items:center;margin:4px 0}
+.bar .track{height:18px;border:3px solid #000;background:#555}
+.bar .fill{height:100%;background:linear-gradient(90deg,#4f8c2f,#8fd16a)}
+.codebox{width:100%;max-width:100%;min-height:90px;font-size:16px;word-break:break-all;color:#7CFC00}
+.shortcode{font-family:'Press Start 2P',monospace;font-size:16px;background:#111;color:#7CFC00;border:3px solid #000;padding:14px;text-align:center;word-break:break-all;line-height:1.8;user-select:all}
+.byline{text-align:center;color:#fff;font-size:20px;text-shadow:2px 2px 0 #333;margin:4px 0 10px}
+.credits{text-align:center;color:#fff;font-size:18px;text-shadow:1px 1px 0 #000;margin-top:24px;padding:10px;background:rgba(0,0,0,.35);border:3px solid #000}
+.cert{text-align:center;border:8px double #000;background:#fff6d0;padding:24px;margin:10px 0}
+.cert h2{font-size:15px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0}
+.tablewrap{overflow-x:auto}
+table.dash td,table.dash th{font-size:18px}
+.statrow{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.stat{background:#fff;border:3px solid #000;padding:8px 12px;text-align:center;min-width:110px}
+.stat b{font-size:28px}
+.warn{color:#b00;font-weight:bold}
+.detail{background:#f4f4f4;padding:10px}
+.btn.danger{background:#b02a2a}
+label{display:block;margin-top:8px}
+.homegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+@media (max-width:600px){.bar{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1 class="title">ORIENTATION<br>CRAFT</h1>
+<p class="subtitle">ESCAPE GAME EN 5 SÉANCES · 1ÈRE BAC PRO MCVA<br>SOUTIEN AU PARCOURS · « ET APRÈS LE BAC ? »</p>
+<p class="byline">Un jeu conçu par <b>Marie Frison</b> · Professeure d'enseignement professionnel · Lycée Jean Hanzelet</p>
+
+<!-- ACCUEIL -->
+<section id="home">
+  <div class="panel">
+    <p>Bienvenue dans <b>Orientation Craft</b> ! Pendant <b>5 séances</b>, vous allez traverser 5 mondes pour découvrir qui vous êtes, les métiers du commerce, les études après le bac pro, l'emploi et l'alternance, puis construire votre projet.</p>
+    <p class="small">Chaque monde se joue en une séance. À la fin de chaque séance, vous recevez un <b>code de sauvegarde</b> : envoyez-le à votre professeur·e et gardez-le pour reprendre la fois suivante.</p>
+  </div>
+  <div class="homegrid">
+    <div class="panel"><h3>🆕 Première séance</h3><p class="small">Créez votre partie (seul·e ou en binôme).</p><div class="center"><button class="btn green" id="newBtn">▶ NOUVELLE PARTIE</button></div></div>
+    <div class="panel"><h3>💾 Reprendre avec mon code</h3><textarea id="resumeCode" placeholder="Tapez ou collez votre code (ex : INES.1MCVA.K7Q2-9MXD)" style="min-height:60px"></textarea><div class="center"><button class="btn gold" id="resumeBtn">REPRENDRE</button></div><div class="msg err" id="mHome"></div></div>
+  </div>
+  <div class="panel" id="localSavesWrap"><div id="localSaves"><p class="small">Aucune partie enregistrée sur cet appareil.</p></div></div>
+  <div class="center"><button class="btn mini" id="profBtn">Espace enseignant</button></div>
+</section>
+
+<!-- ÉTAPE 1 -->
+<section id="s1" class="panel hidden">
+  <div class="step">CRÉATION DE LA PARTIE · 1 / 2</div>
+  <h3>Comment jouez-vous ?</h3>
+  <div class="grid">
+    <div class="card" data-mode="1"><div class="ico">🧍</div><h3>SOLO</h3><div class="small">Je joue seul·e, à mon rythme.</div></div>
+    <div class="card" data-mode="2"><div class="ico">🧍🧍</div><h3>BINÔME</h3><div class="small">On joue à deux : chacun répond à son tour, et on discute ensemble. Gardez le même binôme à chaque séance.</div></div>
+  </div>
+  <div id="names" class="hidden" style="margin-top:16px">
+    <label>Prénom du joueur 1 :</label><input type="text" id="p1" maxlength="20" placeholder="ex : Inès">
+    <div id="p2wrap" class="hidden"><label>Prénom du joueur 2 :</label><input type="text" id="p2" maxlength="20" placeholder="ex : Yanis"></div>
+    <label>Classe :</label><input type="text" id="cls" maxlength="12" placeholder="ex : 1MCVA">
+    <p class="small">Prénom seulement, pas de nom de famille.</p>
+  </div>
+  <div class="msg err" id="m1"></div>
+  <div class="center"><button class="btn" id="back1">◀ RETOUR</button><button class="btn green" id="go1">SUIVANT ▶</button></div>
+</section>
+
+<!-- ÉTAPE 2 -->
+<section id="s2" class="panel hidden">
+  <div class="step">CRÉATION DE LA PARTIE · 2 / 2</div>
+  <h3 id="s2title">Après ton bac pro, tu te vois plutôt…</h3>
+  <p class="small hidden" id="s2duo">Discutez à deux. Si vous avez des projets différents ou si vous hésitez, choisissez « Je ne sais pas encore ».</p>
+  <div class="grid">
+    <div class="card" data-path="etudes"><div class="ico">🎓</div><h3>CONTINUER MES ÉTUDES</h3><div class="small">BTS, certificat de spécialisation, BUT, licence pro…</div></div>
+    <div class="card" data-path="vie"><div class="ico">💼</div><h3>TRAVAILLER DIRECTEMENT</h3><div class="small">Trouver un emploi juste après le bac.</div></div>
+    <div class="card" data-path="alt"><div class="ico">🔁</div><h3>L'ALTERNANCE</h3><div class="small">Étudier ET travailler en étant payé·e.</div></div>
+    <div class="card" data-path="indecis"><div class="ico">❓</div><h3>JE NE SAIS PAS ENCORE</h3><div class="small">Pas de souci : la Boussole du Monde 1 t'aidera.</div></div>
+  </div>
+  <p class="small">Ce choix n'est pas définitif : la Boussole du Monde 1 te permettra de le confirmer ou de le changer.</p>
+  <div class="msg err" id="m2"></div>
+  <div class="center"><button class="btn" id="back2">◀ RETOUR</button><button class="btn green" id="go2">CRÉER LA PARTIE ▶</button></div>
+</section>
+
+<!-- CARTE DES MONDES -->
+<section id="worldmap" class="hidden">
+  <div class="panel"><h3>🗺️ CARTE DES MONDES</h3><div id="mapHead"></div>
+    <div class="center" style="margin-top:8px"><button class="btn mini" id="carnetBtn">📘 MON CARNET</button><button class="btn mini gold" id="saveBtn">💾 MON CODE DE SAUVEGARDE</button><button class="btn mini" id="quitBtn">⏏ QUITTER</button></div>
+    <div id="saveBox"></div></div>
+  <div class="grid" id="worlds"></div>
+  <div id="diffBox"></div>
+</section>
+
+<!-- JEU -->
+<section id="game" class="hidden">
+  <div class="hud">
+    <div><span class="px" id="hudTeam"></span><br><span class="small" id="hudInfo"></span></div>
+    <div class="hearts" id="hudHearts"></div>
+    <div class="slots" id="hudSlots"></div>
+    <div><span class="px" id="hudTime">00:00</span><br><button class="btn mini" id="hudSave">💾</button><button class="btn mini" id="hudMap">🗺️</button></div>
+  </div>
+  <div id="gameSaveBox"></div>
+  <div class="map" id="map"></div>
+  <div id="stage"></div>
+</section>
+
+<!-- CARNET -->
+<section id="carnet" class="panel hidden">
+  <h2 style="font-size:15px">📘 CARNET DE BORD</h2>
+  <div id="carnetBody"></div>
+  <div class="center"><button class="btn" id="carnetBack">◀ CARTE DES MONDES</button></div>
+</section>
+
+<!-- ESPACE ENSEIGNANT -->
+<section id="prof" class="panel hidden">
+  <h2 style="font-size:15px">Espace enseignant</h2>
+  <div id="profLock">
+    <p>Entrez le code enseignant.</p>
+    <input type="text" id="profCode" placeholder="code"> <button class="btn" id="profOk">OK</button>
+    <div class="msg err" id="profMsg"></div>
+  </div>
+  <div id="profArea" class="hidden">
+    <div class="tabs"><button class="btn sel" data-tab="tDash">📊 TABLEAU DE BORD</button><button class="btn" data-tab="tGuide">📖 GUIDE DES SÉANCES</button><button class="btn" data-tab="tAns">🔑 RÉPONSES</button></div>
+    <div id="tDash">
+      <p class="small" id="storeMsg"></p>
+      <div class="res"><h3>📥 Ajouter des résultats</h3><p class="small">Collez un ou plusieurs codes envoyés par les élèves (codes courts ou complets, même au milieu d'un message : le jeu les retrouve).</p>
+        <textarea id="importArea" placeholder="INES.1MCVA.K7Q2-9MXD…"></textarea><div class="center"><button class="btn green" id="importBtn">IMPORTER</button></div><div class="msg ok small" id="importMsg"></div></div>
+      <div class="order-row" style="flex-wrap:wrap;margin:10px 0"><select id="clsFilter"></select><input type="text" id="searchIn" placeholder="rechercher un prénom" style="max-width:240px;font-size:20px">
+        <button class="btn mini" id="copyTable">📋 COPIER LE TABLEAU</button><button class="btn mini" id="delClass">🗑 SUPPRIMER LA SÉLECTION</button></div>
+      <div class="msg ok small" id="copyMsg"></div>
+      <div id="dashStats"></div>
+      <div id="dashTable"></div>
+    </div>
+    <div id="tGuide" class="hidden"></div>
+    <div id="tAns" class="hidden"></div>
+  </div>
+  <div class="center"><button class="btn" id="profBack">◀ RETOUR</button></div>
+</section>
+<footer class="credits">Orientation Craft © Marie Frison – Professeure d'enseignement professionnel, Lycée Jean Hanzelet · Escape game d'orientation pour la 1ère bac pro MCVA</footer>
+</div>
+
+<script>
+const RIASEC = ["Réaliste","Investigateur","Artistique","Social","Entreprenant","Conventionnel"];
+const RIASEC_INFO = {
+  "Réaliste":{verb:"faire, manipuler",act:"Bricoler, installer, manipuler du matériel",metiers:"vendeur·se-conseil en bricolage ou produits techniques, magasinier·e, logisticien·ne"},
+  "Investigateur":{verb:"chercher, comprendre",act:"Comprendre, analyser, chercher des infos",metiers:"chargé·e d'études marketing, analyste e-commerce, acheteur·se"},
+  "Artistique":{verb:"créer, imaginer",act:"Créer, décorer, imaginer des choses nouvelles",metiers:"visual merchandiser, community manager, vendeur·se en déco ou mode"},
+  "Social":{verb:"aider, accompagner",act:"Aider, écouter, conseiller les gens",metiers:"conseiller·e clientèle, vendeur·se-conseil, conseiller·e en voyages"},
+  "Entreprenant":{verb:"convaincre, diriger",act:"Convaincre, vendre, prendre des responsabilités",metiers:"commercial·e terrain, manager·euse de rayon, créateur·rice d'entreprise"},
+  "Conventionnel":{verb:"organiser, vérifier",act:"Organiser, ranger, vérifier des chiffres",metiers:"gestionnaire de stocks, assistant·e de gestion PME, conseiller·e bancaire"}
+};
+
+/* ---------------- SALLES ---------------- */
+const ROOMS = {
+miroir:{ name:"LA GROTTE DU MIROIR", theme:"Se connaître", bio:"bio-a", self:true,
+  info:`<h3>📜 Parchemin : se connaître pour s'orienter</h3>
+  <p>Avant de choisir une formation ou un emploi, il faut savoir ce qu'on aime faire. Le psychologue John Holland a classé les centres d'intérêt en <b>6 profils</b> (modèle « RIASEC ») :</p>
+  <div class="info-grid">${RIASEC.map(r=>`<div class="info-card"><b>${r}</b>Aime : ${RIASEC_INFO[r].verb}.<br><i>Ex. dans le commerce : ${RIASEC_INFO[r].metiers}.</i></div>`).join("")}</div>
+  <p>Personne n'a qu'un seul profil : on a souvent 2 ou 3 profils dominants. Vos <b>PFMP</b> sont aussi un super miroir : qu'avez-vous aimé ? qu'est-ce qui vous a ennuyé ?</p>`,
+  intro:"Les murs reflètent les goûts des aventuriers. Associez chaque activité au profil RIASEC qui lui correspond le mieux.",
+  type:"match", choices:RIASEC, count:[6,9,12],
+  items:[["Réparer un moteur, construire un meuble","Réaliste"],["Mener une enquête pour comprendre pourquoi un produit ne se vend pas","Investigateur"],["Créer une affiche, décorer une vitrine","Artistique"],["Écouter, conseiller ou rassurer un client perdu","Social"],["Convaincre un client, diriger une équipe","Entreprenant"],["Classer des factures, gérer un budget au centime près","Conventionnel"],["Analyser des chiffres de ventes pour trouver une tendance","Investigateur"],["Animer un groupe de jeunes en colo","Social"],["Écrire et filmer une vidéo pour TikTok","Artistique"],["Monter sa propre entreprise","Entreprenant"],["Faire l'inventaire d'une réserve","Conventionnel"],["Installer et mettre en rayon des produits lourds","Réaliste"]],
+  hints:["Chaque profil a un verbe-clé : Réaliste = faire, Investigateur = chercher, Artistique = créer, Social = aider, Entreprenant = convaincre, Conventionnel = organiser.","« Inventaire » et « factures » demandent rigueur et méthode : profil Conventionnel."],
+  mission:"Dans l'appli Hello Charly, réponds aux questions pour mieux te connaître. Compare le résultat avec le profil trouvé dans le Miroir.",
+  solo:"Écris 3 mots qui te décrivent, et une activité de PFMP que tu as vraiment aimée.",
+  duo:"Chacun dit à l'autre une qualité qu'il voit chez lui/elle. Êtes-vous d'accord avec votre profil du Miroir ?"},
+
+mine:{ name:"LA MINE DES MÉTIERS", theme:"Métiers du commerce", bio:"bio-b",
+  info:`<h3>📜 Parchemin : les métiers du commerce et de la vente</h3>
+  <p>Avec un bac pro MCV, on peut travailler tout de suite ou se spécialiser. Voici des familles de métiers :</p>
+  <div class="info-grid">
+   <div class="info-card"><b>🏬 EN MAGASIN</b>Vendeur·se-conseil, employé·e de commerce, hôte·sse de caisse. Avec de l'expérience ou un BTS MCO : adjoint·e, manager·euse de rayon, directeur·rice de magasin.</div>
+   <div class="info-card"><b>🤝 RELATION CLIENT</b>Commercial·e terrain, chargé·e de clientèle, téléconseiller·e, conseiller·e clientèle à distance (BTS NDRC).</div>
+   <div class="info-card"><b>💻 E-COMMERCE</b>Chargé·e de e-commerce, community manager, préparateur·rice de commandes web.</div>
+   <div class="info-card"><b>🏦 SERVICES</b>Conseiller·e bancaire ou en assurance, négociateur·rice immobilier, conseiller·e en voyages.</div>
+   <div class="info-card"><b>🌍 INTERNATIONAL</b>Assistant·e import-export, commercial·e export (BTS Commerce international).</div>
+   <div class="info-card"><b>🎨 MISE EN VALEUR</b>Visual merchandiser (étalagiste) : il/elle met en scène les produits.</div>
+  </div>`,
+  intro:"Des mineurs ont laissé des témoignages gravés dans la pierre. Retrouvez quel métier parle à chaque fois.",
+  type:"quiz", count:[5,7,10],
+  items:[
+   ["« J'encadre une équipe de vendeurs, je gère les stocks et je dois atteindre les objectifs de mon rayon. »",["Manager·euse de rayon","Employé·e de libre-service","Acheteur·se","Logisticien·ne"],0,"BTS MCO"],
+   ["« Je démarche de nouveaux clients sur le terrain et au téléphone, et je négocie des contrats. »",["Hôte·sse de caisse","Commercial·e terrain","Chargé·e d'accueil","Préparateur·rice de commandes"],1,"BTS NDRC"],
+   ["« Je mets en scène les vitrines et les produits pour donner envie d'acheter. »",["Graphiste","Décorateur·rice d'intérieur","Visual merchandiser (étalagiste)","Photographe"],2,"BTS MCO, formations en merchandising"],
+   ["« Je conseille des clients sur leur épargne et leurs crédits en agence. »",["Expert·e-comptable","Trader","Conseiller·e bancaire","Assureur·se"],2,"BTS Banque, conseiller de clientèle"],
+   ["« J'organise des voyages sur mesure et je vends des séjours en agence. »",["Conseiller·e en voyages","Guide-conférencier·e","Steward / hôtesse de l'air","Agent·e d'escale"],0,"BTS Tourisme"],
+   ["« J'anime la page Instagram et la boutique en ligne d'une marque. »",["Journaliste","Chargé·e d'e-commerce et réseaux sociaux","Développeur·se","Vendeur·se en magasin"],1,"BTS NDRC, BTS Communication"],
+   ["« J'aide le patron d'une petite entreprise : devis, factures, relation clients, planning. »",["Assistant·e de gestion de PME","Secrétaire médical·e","Comptable","Manager·euse de rayon"],0,"BTS GPME"],
+   ["« Je fais visiter des appartements et je négocie des ventes ou des locations. »",["Architecte","Notaire","Négociateur·rice immobilier","Agent·e de sécurité"],2,"BTS Professions immobilières"],
+   ["« Je gère les commandes avec des fournisseurs étrangers et le transport des marchandises. »",["Douanier·e","Assistant·e import-export","Chauffeur·se-livreur·se","Hôte·sse d'accueil"],1,"BTS Commerce international"],
+   ["« Je réponds aux clients par téléphone, mail et chat pour résoudre leurs problèmes. »",["Conseiller·e clientèle à distance","Agent·e de sécurité","Livreur·se","Comptable"],0,"Accessible après le bac pro ; évolution avec un BTS NDRC"]
+  ],
+  hints:["Repérez le mot-clé de chaque témoignage : « rayon », « vitrines », « épargne », « fournisseurs étrangers »…","« Équipe + stocks + objectifs » = un poste d'encadrement en magasin."],
+  mission:"Dans Hello Charly, ouvre la fiche d'un métier du commerce qui t'intéresse et lis/écoute un témoignage de pro.",
+  solo:"Choisis UN métier de la salle qui te tente. Note : ce qui t'attire, et ce qui te fait peur.",
+  duo:"Chacun choisit un métier de la salle et le « vend » à l'autre en 30 secondes, comme un commercial !"},
+
+bts:{ name:"LA BIBLIOTHÈQUE DES BTS", theme:"Les BTS", bio:"bio-g",
+  info:`<h3>📜 Parchemin : le BTS, la poursuite d'études n°1 après un bac pro</h3>
+  <ul>
+   <li>Le <b>BTS</b> (brevet de technicien supérieur) se prépare en <b>2 ans</b> après le bac, en lycée (classe de « STS ») ou <b>en apprentissage</b>.</li>
+   <li>Il donne un niveau <b>bac+2</b> et permet de travailler ou de continuer (licence pro, bachelor…).</li>
+   <li>Pour les bacheliers pro, il existe un dispositif spécial : si le <b>conseil de classe donne un avis favorable</b> pour un BTS, tu es <b>prioritaire</b> pour y entrer sur Parcoursup.</li>
+   <li>Les BTS les plus proches du bac pro MCV : <b>MCO</b> (management commercial opérationnel) et <b>NDRC</b> (négociation et digitalisation de la relation client). Mais beaucoup d'autres sont possibles !</li>
+   <li>Un BTS demande du travail personnel : un bon dossier et une vraie motivation comptent beaucoup.</li>
+  </ul>`,
+  intro:"Les livres sont mélangés ! Pour chaque description, retrouvez le BTS correspondant.",
+  type:"match", choices:["BTS MCO","BTS NDRC","BTS Commerce international","BTS Tourisme","BTS GPME","BTS Banque","BTS Assurance","BTS Professions immobilières","BTS SAM","BTS Communication","BTS CCST"], count:[6,8,11], easyChoices:true,
+  items:[["Gérer un magasin, un rayon ou un site marchand et manager une équipe","BTS MCO"],["Prospecter, négocier et animer la relation client, aussi en ligne et sur les réseaux","BTS NDRC"],["Acheter et vendre à l'étranger, organiser le transport des marchandises","BTS Commerce international"],["Vendre des voyages, accueillir et accompagner des touristes","BTS Tourisme"],["Seconder le patron d'une petite entreprise : gestion, clients, fournisseurs","BTS GPME"],["Conseiller des particuliers sur leurs comptes, leur épargne, leurs crédits","BTS Banque"],["Vendre des contrats d'assurance et gérer les sinistres des clients","BTS Assurance"],["Vendre, louer et gérer des appartements ou des maisons","BTS Professions immobilières"],["Assister un manager : organisation, communication, suivi de projets","BTS SAM"],["Imaginer des campagnes de communication pour une marque","BTS Communication"],["Vendre des solutions techniques (matériaux, équipements) à des professionnels","BTS CCST"]],
+  hints:["MCO = Management Commercial Opérationnel (le magasin). NDRC = Négociation et Digitalisation de la Relation Client (la prospection).","SAM = Support à l'Action Managériale. CCST = Conseil et Commercialisation de Solutions Techniques."],
+  mission:"Dans Hello Charly, cherche un des BTS de la salle : où se prépare-t-il près de chez toi ? Existe-t-il en apprentissage ?",
+  solo:"Classe tes 3 BTS préférés de la salle, du plus attirant au moins attirant.",
+  duo:"Chacun choisit un BTS. Expliquez à l'autre pourquoi il vous irait (ou pas !)."},
+
+forge:{ name:"LA FORGE DES FORMATIONS", theme:"Études après le bac pro", bio:"bio-c",
+  info:`<h3>📜 Parchemin : toutes les formations possibles après un bac pro MCV</h3>
+  <div class="info-grid">
+   <div class="info-card"><b>1 AN</b><u>Certificat de spécialisation (CS)</u>, l'ancienne « mention complémentaire » : 1 an pour se spécialiser (ex. vendeur-conseil en produits techniques pour l'habitat, vendeur-conseil en alimentation, accueil dans les transports).<br><u>FCIL</u> (formation complémentaire d'initiative locale) : 1 an, souvent liée aux besoins des entreprises de la région.<br><u>Classe passerelle</u> : 1 an pour consolider son niveau avant un BTS. ⚠️ Ce n'est pas un diplôme et ça ne garantit pas une place en BTS.</div>
+   <div class="info-card"><b>2 ANS</b><u>BTS</u> : la voie la plus choisie par les bacheliers pro (MCO, NDRC, CI, Tourisme, GPME, Banque…), en lycée ou en apprentissage.<br><u>Titres professionnels</u> du ministère du Travail (ex. manager d'unité marchande), souvent en alternance ou en formation continue.</div>
+   <div class="info-card"><b>3 ANS ET PLUS</b><u>BUT TC</u> (Techniques de commercialisation, en IUT) : possible mais plus sélectif après un bac pro.<br><u>Licence professionnelle</u> : 1 an après un BTS, donc bac+3.<br><u>Bachelor</u> d'école de commerce ou de la vente (souvent payant, parfois en alternance).</div>
+  </div>`,
+  intro:"Le forgeron ne sait plus combien de temps durent les formations après un bac pro ! Pour chacune, indiquez sa durée après le bac.",
+  type:"bucket", buckets:["1 an","2 ans","3 ans"], count:[6,9,13],
+  items:[["Certificat de spécialisation Vendeur-conseil en produits techniques pour l'habitat","1 an"],["Classe passerelle (préparation à l'entrée en BTS)","1 an"],["BTS MCO – Management commercial opérationnel","2 ans"],["BTS NDRC – Négociation et digitalisation de la relation client","2 ans"],["BTS Commerce international","2 ans"],["BTS Tourisme","2 ans"],["BTS GPME – Gestion de la PME","2 ans"],["BTS Banque, conseiller de clientèle","2 ans"],["BUT TC – Techniques de commercialisation (IUT)","3 ans"],["BTS puis licence professionnelle commerce (en tout)","3 ans"],["Bachelor d'une école de commerce ou de la vente","3 ans"],["Certificat de spécialisation Vendeur-conseil en alimentation","1 an"],["FCIL (formation complémentaire d'initiative locale)","1 an"]],
+  hints:["Tous les BTS durent 2 ans, qu'ils soient en lycée ou en apprentissage.","Certificat de spécialisation, FCIL et classe passerelle : 1 an. BUT et bachelor : 3 ans."],
+  mission:"Dans Hello Charly, cherche une formation de la Forge près de chez toi : où ? en lycée ou en apprentissage ?",
+  solo:"Si tu devais choisir aujourd'hui : formation courte (1 an), BTS (2 ans) ou plus long ? Pourquoi ?",
+  duo:"Comparez : qui de vous deux a envie d'études plus longues ? Qu'est-ce qui vous motive ou vous freine ?"},
+
+parcoursup:{ name:"LE VILLAGE PARCOURSUP", theme:"Le calendrier Parcoursup", bio:"bio-d",
+  info:`<h3>📜 Parchemin : Parcoursup, mode d'emploi</h3>
+  <ul>
+   <li><b>Parcoursup</b> est la plateforme nationale pour candidater aux formations après le bac : BTS, BUT, licences, mais aussi beaucoup de formations <b>en apprentissage</b>.</li>
+   <li>On peut faire jusqu'à <b>10 vœux</b> (hors apprentissage), qui ne sont <b>pas classés</b> par ordre de préférence.</li>
+   <li>Pour chaque vœu, on écrit un <b>projet de formation motivé</b> : pourquoi cette formation ? qu'est-ce que mes PFMP m'ont apporté ?</li>
+   <li>Le <b>conseil de classe</b> donne un avis sur chaque vœu (fiche Avenir). Pour un BTS, un avis favorable rend un bachelier pro prioritaire.</li>
+   <li>Les réponses arrivent début juin. Sans proposition : la <b>phase complémentaire</b> (à partir de mi-juin), puis la <b>CAES</b> (commission d'accès à l'enseignement supérieur) à partir de juillet.</li>
+   <li>⚠️ Les dates exactes changent chaque année : vérifiez-les sur parcoursup.gouv.fr.</li>
+  </ul>`,
+  intro:"Les villageois ont mélangé le calendrier ! Remettez les étapes dans l'ordre chronologique avec les flèches ▲ ▼.",
+  type:"order", slices:[[1,6],[1,8],[0,9]],
+  items:[["En 1ère : j'explore les métiers et les formations (Hello Charly, salons, portes ouvertes)","J'explore les métiers et les formations (Hello Charly, salons, portes ouvertes)"],["Décembre de Terminale : je découvre l'offre de formations sur Parcoursup","Je découvre l'offre de formations sur Parcoursup"],["Mi-janvier : je m'inscris et je crée mon dossier","Je m'inscris et je crée mon dossier"],["Jusqu'à mi-mars : je formule mes vœux (BTS, apprentissage, CS…)","Je formule mes vœux (BTS, apprentissage, CS…)"],["Début avril : je rédige mes projets de formation motivés et je confirme mes vœux","Je rédige mes projets de formation motivés et je confirme mes vœux"],["Printemps : le conseil de classe donne son avis sur chaque vœu (fiche Avenir)","Le conseil de classe donne son avis sur chaque vœu (fiche Avenir)"],["Début juin : je reçois les réponses des formations","Je reçois les réponses des formations"],["Mi-juin : sans proposition, je fais de nouveaux vœux en phase complémentaire","Sans proposition, je fais de nouveaux vœux en phase complémentaire"],["Juillet : toujours rien ? je sollicite la CAES de mon académie","Toujours rien ? je sollicite la CAES de mon académie"]],
+  hints:["On s'inscrit AVANT de formuler ses vœux, et on les confirme APRÈS.","Ordre de la fin : réponses → phase complémentaire → CAES."],
+  mission:"Dans Hello Charly, pose à Charly une question sur Parcoursup après un bac pro (ex : « Comment avoir un avis favorable pour un BTS ? »).",
+  solo:"Écris le début de ton projet de formation motivé : « Je souhaite intégrer ce BTS parce que… »",
+  duo:"L'un joue le jury, l'autre explique en 1 minute pourquoi il veut sa formation. Puis on échange les rôles."},
+
+aides:{ name:"LE COMPTOIR DES ALLIÉS", theme:"Qui peut m'aider ?", bio:"bio-h",
+  info:`<h3>📜 Parchemin : on ne s'oriente pas tout seul !</h3>
+  <div class="info-grid">
+   <div class="info-card"><b>AU LYCÉE</b>Professeur·e principal·e, professeurs d'enseignement pro, CPE, <u>psychologue de l'Éducation nationale</u> (Psy-EN), qui reçoit aussi au <u>CIO</u> (centre d'information et d'orientation).</div>
+   <div class="info-card"><b>POUR S'INFORMER</b><u>Onisep</u> (fiches métiers et formations), <u>Parcoursup</u>, l'appli <u>Hello Charly</u>, le réseau <u>Information Jeunesse</u> (emploi, jobs d'été, logement…).</div>
+   <div class="info-card"><b>POUR TRAVAILLER</b><u>France Travail</u> (ex-Pôle emploi) : offres, inscription des demandeurs d'emploi. <u>Mission locale</u> : accompagne les 16-25 ans (emploi, formation, mais aussi logement, santé, mobilité). <u>Agences d'intérim</u>.</div>
+   <div class="info-card"><b>POUR L'ALTERNANCE</b><u>CFA</u> (centre de formation d'apprentis), site public <u>La bonne alternance</u>, chambres de commerce (CCI).</div>
+   <div class="info-card"><b>TON RÉSEAU</b>Tuteurs de PFMP, famille, anciens élèves, salons, portes ouvertes : beaucoup d'emplois se trouvent grâce au réseau !</div>
+  </div>`,
+  intro:"Au comptoir, chaque allié a perdu son badge. Associez chaque description à la bonne structure.",
+  type:"match", choices:["Mission locale","France Travail","CIO","CFA","Onisep","Parcoursup","La bonne alternance","Agence d'intérim","Information Jeunesse"], count:[5,7,9], easyChoices:true,
+  items:[["Accompagne les 16-25 ans vers l'emploi, mais aussi pour le logement ou la santé","Mission locale"],["Service public qui diffuse des offres et accompagne les demandeurs d'emploi","France Travail"],["Lieu où un·e psychologue de l'Éducation nationale conseille sur l'orientation","CIO"],["Centre où l'apprenti suit ses cours","CFA"],["Site public qui présente les métiers et les formations","Onisep"],["Plateforme nationale pour candidater dans les formations après le bac","Parcoursup"],["Site public pour trouver une entreprise qui recrute en alternance","La bonne alternance"],["Entreprise qui propose des missions de travail temporaire","Agence d'intérim"],["Réseau qui informe les jeunes sur l'emploi, les jobs d'été, le logement","Information Jeunesse"]],
+  hints:["Les 16-25 ans qui cherchent un emploi ont une structure dédiée : la Mission locale.","Le psychologue de l'Éducation nationale reçoit au CIO."],
+  mission:"Dans Hello Charly, repère si l'appli propose d'échanger avec un·e conseiller·e ou un·e pro. Note le contact d'un allié près de chez toi (CIO, Mission locale…).",
+  solo:"Qui, autour de toi, pourrait t'aider dans ton projet ? Note 2 personnes et ce que tu leur demanderais.",
+  duo:"Dressez ensemble la liste de vos « alliés » : profs, tuteurs de PFMP, famille… Qui contacter en premier ?"},
+
+contrats:{ name:"LE MARCHÉ DES CONTRATS", theme:"Les contrats de travail", bio:"bio-i",
+  info:`<h3>📜 Parchemin : les contrats de travail</h3>
+  <div class="info-grid">
+   <div class="info-card"><b>CDI</b>Contrat à durée indéterminée : pas de date de fin. C'est la forme normale d'embauche.</div>
+   <div class="info-card"><b>CDD</b>Contrat à durée déterminée : avec une date de fin (remplacement, saison, surcroît d'activité). En général, une prime de fin de contrat est versée.</div>
+   <div class="info-card"><b>INTÉRIM</b>On est salarié d'une agence d'intérim qui nous envoie en mission dans des entreprises.</div>
+   <div class="info-card"><b>ALTERNANCE</b><u>Contrat d'apprentissage</u> (préparer un diplôme, CFA + entreprise) ou <u>contrat de professionnalisation</u> (obtenir une qualification, ouvert aussi aux demandeurs d'emploi).</div>
+   <div class="info-card"><b>LES MOTS À CONNAÎTRE</b><u>Période d'essai</u> : début du contrat où chacun peut arrêter plus facilement. <u>Temps partiel</u> : moins de 35 h par semaine. <u>Salaire brut</u> (avant cotisations) &gt; <u>salaire net</u> (ce qu'on touche). Le <u>SMIC</u> est le salaire minimum.</div>
+  </div>`,
+  intro:"Les marchands mélangent leurs contrats. Associez chaque situation au bon type de contrat ou au bon mot.",
+  type:"match", choices:["CDI","CDD","Intérim","Contrat d'apprentissage","Contrat de professionnalisation","Temps partiel","Période d'essai","Salaire net"], count:[5,7,9], easyChoices:true,
+  items:[["Contrat sans date de fin : la forme normale d'embauche","CDI"],["Contrat de 6 mois pour remplacer une vendeuse en congé maternité","CDD"],["Je suis salarié d'une agence et je fais des missions dans différentes entreprises","Intérim"],["Je prépare un BTS en alternant cours au CFA et entreprise, et je suis payé","Contrat d'apprentissage"],["Contrat en alternance pour obtenir une qualification, ouvert aussi aux demandeurs d'emploi","Contrat de professionnalisation"],["Je travaille 20 heures par semaine","Temps partiel"],["Les premières semaines où l'employeur et moi vérifions que le poste me convient","Période d'essai"],["Ce que je reçois vraiment sur mon compte, après les cotisations","Salaire net"],["Un job de juillet-août dans un magasin de plage","CDD"]],
+  hints:["Une date de fin = CDD. Pas de date de fin = CDI.","Le net est ce qui reste après les cotisations : il est plus petit que le brut."],
+  mission:"Dans Hello Charly, ouvre une fiche métier du commerce et repère le salaire de début indiqué (brut ou net ?).",
+  solo:"Quel contrat aimerais-tu signer après le bac ? Quels avantages et inconvénients ?",
+  duo:"Débat express : « Mieux vaut un CDD tout de suite qu'attendre un CDI. » L'un est pour, l'autre contre !"},
+
+cv:{ name:"L'ATELIER DU CV", theme:"Le CV", bio:"bio-k",
+  info:`<h3>📜 Parchemin : le CV qui donne envie</h3>
+  <ul>
+   <li><b>1 page</b>, clair, sans faute, avec un titre (ex. « Vendeur·se-conseil – Bac pro MCV »).</li>
+   <li><b>Coordonnées</b> : téléphone et adresse mail <u>sérieuse</u> (prenom.nom@…).</li>
+   <li><b>Formation</b> : bac pro MCV option A (en cours), diplômes déjà obtenus.</li>
+   <li><b>Expériences</b> : vos <b>PFMP</b> comptent ! Lieu, dates, missions (encaissement, mise en rayon, conseil client…). Jobs d'été, baby-sitting, bénévolat aussi.</li>
+   <li><b>Compétences</b> : savoir-faire (merchandising, vente, accueil) et savoir-être (ponctualité, sourire, travail en équipe). Langues, logiciels, permis.</li>
+   <li><b>Centres d'intérêt</b> précis (club de sport, association) : ils montrent votre personnalité.</li>
+   <li>⛔ Jamais obligatoire ni conseillé : religion, opinions politiques, numéro de sécurité sociale. La photo n'est pas obligatoire : si vous en mettez une, elle doit être professionnelle.</li>
+   <li>Toujours accompagner le CV d'un message ou d'une <b>lettre de motivation</b> adaptée à l'entreprise.</li>
+  </ul>`,
+  intro:"L'atelier fabrique un CV. Pour chaque élément : on le met, ou on l'évite ?",
+  type:"bucket", buckets:["✅ À mettre","⛔ À éviter"], count:[6,9,12],
+  items:[["Mon numéro de téléphone et une adresse mail sérieuse","✅ À mettre"],["Bac pro MCV option A (en cours)","✅ À mettre"],["Mes PFMP avec les missions réalisées","✅ À mettre"],["Compétences : encaissement, mise en rayon, conseil client","✅ À mettre"],["Langues parlées (anglais, espagnol, arabe…)","✅ À mettre"],["Permis B ou conduite accompagnée en cours","✅ À mettre"],["Centre d'intérêt précis : capitaine de mon club de basket","✅ À mettre"],["L'adresse mail « bogoss_du_93@… »","⛔ À éviter"],["Ma religion et mes opinions politiques","⛔ À éviter"],["Mon numéro de sécurité sociale","⛔ À éviter"],["Une photo de soirée","⛔ À éviter"],["Un CV de 4 pages","⛔ À éviter"],["Inventer une expérience que je n'ai pas eue","⛔ À éviter"],["Des fautes d'orthographe","⛔ À éviter"]],
+  hints:["Tout ce qui est privé (religion, sécu, opinions) ne regarde pas l'employeur.","Les PFMP sont de vraies expériences professionnelles : elles vont sur le CV !"],
+  mission:"Dans Hello Charly, regarde si un atelier CV est proposé, et commence ton CV avec tes PFMP.",
+  solo:"Écris le titre de ton CV et tes 3 meilleures compétences.",
+  duo:"Chacun écrit 2 compétences qu'il a vues chez l'autre pendant les cours ou les PFMP. Échangez vos listes !"},
+
+entretien:{ name:"L'ARÈNE DE L'ENTRETIEN", theme:"L'entretien d'embauche", bio:"bio-j",
+  info:`<h3>📜 Parchemin : réussir son entretien</h3>
+  <ul>
+   <li><b>Avant</b> : se renseigner sur l'entreprise (produits, valeurs, magasins), relire l'offre, préparer des exemples tirés des PFMP.</li>
+   <li><b>Le jour J</b> : arriver 5 à 10 min en avance, tenue propre et adaptée à l'enseigne, téléphone éteint, sourire, poignée de main ou bonjour clair.</li>
+   <li><b>Pendant</b> : écouter, répondre avec des exemples concrets (« En PFMP, j'ai géré un client mécontent… »), être honnête.</li>
+   <li><b>Questions pièges</b> : « Parlez-moi de vous », « Vos défauts ? », « Pourquoi nous ? ». Préparez-les !</li>
+   <li><b>À la fin</b> : poser une question sur le poste ou l'équipe. <b>Après</b> : un court mail de remerciement.</li>
+   <li>Un employeur n'a pas le droit de refuser quelqu'un pour son origine, sa religion, son sexe, son handicap… : c'est de la <b>discrimination</b>, interdite par la loi.</li>
+  </ul>`,
+  intro:"Dans l'arène, un recruteur vous teste. Choisissez à chaque fois la meilleure réaction.",
+  type:"quiz", count:[5,7,10],
+  items:[
+   ["Votre entretien est à 14 h. Vous arrivez…",["À 13 h 50, 5 à 10 minutes en avance","Pile à 14 h 00","À 14 h 20 avec une excuse","À 13 h, une heure en avance"],0],
+   ["« Parlez-moi de vous. »",["Je raconte ma vie de famille","Je présente ma formation, mes PFMP et ce qui me motive pour ce poste","« Tout est sur mon CV. »","« Euh… je sais pas trop. »"],1],
+   ["« Quel est votre principal défaut ? »",["« Je n'en ai aucun. »","« Je suis souvent en retard. »","Un vrai petit défaut + ce que je fais pour progresser","« Je suis trop parfait. »"],2],
+   ["« Pourquoi notre entreprise ? »",["« C'est près de chez moi. »","« Pour l'argent. »","« J'ai postulé partout. »","Je cite ce que je sais de l'entreprise et pourquoi elle me plaît"],3],
+   ["Quelle tenue pour un poste de vendeur dans une enseigne de mode ?",["Un survêtement","Une tenue propre et dans le style de l'enseigne","Une tenue de soirée","Peu importe"],1],
+   ["Pendant l'entretien, votre téléphone…",["Est posé sur la table","Est éteint ou en silencieux, rangé","Sert à montrer vos photos","Reste en sonnerie au cas où"],1],
+   ["« Avez-vous des questions ? »",["« Non. »","« Combien de vacances j'aurai ? » en premier","« C'est fini ? »","Oui : sur les missions, l'équipe ou la suite du recrutement"],3],
+   ["Après l'entretien…",["J'envoie un court mail pour remercier","J'appelle tous les jours pour avoir la réponse","Je n'en parle plus","Je publie mon avis sur les réseaux"],0],
+   ["« Un client est mécontent, que faites-vous ? »",["Je l'ignore","Je lui dis qu'il a tort","J'écoute, je reformule, je propose une solution ou je passe le relais","J'appelle la sécurité"],2],
+   ["Le recruteur vous demande votre religion.",["Je dois répondre, c'est obligatoire","Je peux poliment ne pas répondre : cette question n'a pas à être posée","Je quitte la salle en criant","Je mens"],1]
+  ],
+  hints:["Le recruteur cherche quelqu'un de ponctuel, préparé et motivé : choisissez toujours l'option la plus professionnelle.","Les bonnes réponses s'appuient sur des exemples concrets, souvent tirés des PFMP."],
+  mission:"Dans Hello Charly, regarde les conseils proposés pour préparer un entretien ou une demande de stage.",
+  solo:"Prépare ta réponse à « Parlez-moi de vous » en 3 phrases.",
+  duo:"Simulation ! L'un est recruteur et pose 3 questions de la salle, l'autre répond. Puis on échange les rôles."},
+
+alternance:{ name:"LA TOUR DE L'ALTERNANCE", theme:"L'apprentissage", bio:"bio-e",
+  info:`<h3>📜 Parchemin : l'alternance, étudier ET travailler</h3>
+  <ul>
+   <li>L'<b>apprenti</b> signe un <b>contrat de travail</b> avec une entreprise : c'est un vrai salarié, avec un <b>maître d'apprentissage</b>.</li>
+   <li>Il alterne périodes en entreprise et cours au <b>CFA</b>. Le rythme varie selon les formations (ex. 2 jours / 3 jours, ou 1 semaine / 2 semaines).</li>
+   <li>Il est <b>payé</b> : un pourcentage du SMIC qui dépend de son âge et de son année de formation. Il a droit à <b>5 semaines de congés payés</b> par an, plus des jours pour réviser ses examens.</li>
+   <li>La formation est <b>gratuite</b> pour l'apprenti. En général, on signe entre 16 et 29 ans.</li>
+   <li>Presque tous les diplômes se préparent en apprentissage : <b>BTS MCO, NDRC</b>, certificats de spécialisation, titres pro, licences pro, bachelors…</li>
+   <li>Le plus dur : <b>trouver l'entreprise</b>. Il faut chercher tôt (dès le printemps), avec l'aide du CFA, de ses tuteurs de PFMP et du site La bonne alternance. On peut aussi postuler à des formations en apprentissage sur Parcoursup.</li>
+  </ul>`,
+  intro:"Au sommet de la tour, l'alternance n'a plus de secrets… si vous démêlez le vrai du faux !",
+  type:"tf", count:[6,8,11],
+  items:[["L'apprenti a un contrat de travail : c'est un salarié.",true],["On peut préparer un BTS MCO ou NDRC en apprentissage.",true],["Le salaire de l'apprenti dépend de son âge et de son année de formation.",true],["L'apprenti n'a pas droit aux congés payés.",false],["La formation en apprentissage est payante pour l'apprenti.",false],["En général, c'est à l'apprenti de trouver son entreprise, avec l'aide du CFA.",true],["Le rythme d'alternance est le même dans tous les CFA.",false],["L'apprentissage ne prépare qu'aux métiers manuels.",false],["On peut postuler à des formations en apprentissage sur Parcoursup.",true],["Dans l'entreprise, l'apprenti est suivi par un maître d'apprentissage.",true],["Il vaut mieux attendre septembre pour chercher son entreprise.",false]],
+  hints:["L'apprenti a les mêmes droits que les autres salariés : contrat, salaire, congés.","Pour trouver une entreprise, mieux vaut s'y prendre tôt : dès le printemps."],
+  mission:"Dans Hello Charly ou sur La bonne alternance, cherche une offre d'apprentissage en BTS commercial près de chez toi.",
+  solo:"Note 3 entreprises (dont celles de tes PFMP) que tu pourrais contacter pour une alternance.",
+  duo:"Faites la liste des avantages et des difficultés de l'alternance. Pour qui de vous deux est-ce le plus adapté ?"},
+
+carrefour:{ name:"LE CARREFOUR DES CHEMINS", theme:"Tous les chemins", bio:"bio-f",
+  info:`<h3>📜 Parchemin : après le bac pro, il y a plein de chemins !</h3>
+  <div class="info-grid">
+   <div class="info-card"><b>💼 TRAVAILLER</b>Le bac pro est fait pour entrer dans la vie active : vendeur·se, employé·e de commerce, conseiller·e clientèle… Une PFMP peut même déboucher sur une embauche.</div>
+   <div class="info-card"><b>🎓 BTS EN LYCÉE</b>2 ans à temps plein pour un bac+2 (MCO, NDRC…). Prioritaire si le conseil de classe donne un avis favorable.</div>
+   <div class="info-card"><b>🔁 ALTERNANCE</b>BTS, titre pro ou spécialisation en étant payé·e, avec un contrat de travail.</div>
+   <div class="info-card"><b>🔧 SE SPÉCIALISER EN 1 AN</b>Certificat de spécialisation (ex-mention complémentaire) ou FCIL.</div>
+   <div class="info-card"><b>🌉 CLASSE PASSERELLE</b>1 an pour consolider son niveau avant le BTS, pour ceux qui ont un avis favorable mais aucune proposition.</div>
+   <div class="info-card"><b>🤲 SERVICE CIVIQUE</b>Une mission utile de 6 à 12 mois (association, mairie…), indemnisée, ouverte aux 16-25 ans.</div>
+   <div class="info-card"><b>🚀 CRÉER SON ENTREPRISE</b>Boutique en ligne, micro-entreprise… Des structures accompagnent les jeunes créateurs.</div>
+   <div class="info-card"><b>🎖️ ARMÉE, CONCOURS</b>Armée, gendarmerie, police, fonction publique : on y recrute aussi avec un bac.</div>
+  </div>
+  <p>Et rien n'est définitif : on peut travailler puis reprendre des études plus tard !</p>`,
+  intro:"Huit jeunes sont perdus au carrefour. Aidez chacun à trouver le chemin qui correspond à son envie.",
+  type:"match", choices:["Travailler directement","BTS en lycée","BTS en apprentissage","Certificat de spécialisation","Classe passerelle","Service civique","Créer son entreprise","Armée / concours"], count:[5,6,8], easyChoices:true,
+  items:[["Inès veut gagner sa vie dès le bac : le magasin de sa PFMP veut l'embaucher","Travailler directement"],["Yanis veut un bac+2 et préfère rester en cours à temps plein","BTS en lycée"],["Sarah veut un BTS, mais aussi un salaire et de l'expérience","BTS en apprentissage"],["Tom veut se spécialiser en 1 an dans la vente de produits pour la maison","Certificat de spécialisation"],["Léa a eu un avis favorable pour un BTS mais aucune proposition ; elle veut renforcer son niveau","Classe passerelle"],["Mehdi veut s'engager 8 mois dans une association et être indemnisé","Service civique"],["Chloé rêve d'ouvrir sa propre boutique en ligne","Créer son entreprise"],["Adam veut entrer dans la gendarmerie","Armée / concours"]],
+  hints:["« Salaire + diplôme » = apprentissage. « Spécialisation en 1 an » = certificat de spécialisation.","Un engagement de quelques mois dans une association, indemnisé : service civique."],
+  mission:"Dans Hello Charly, explore 2 chemins de ce carrefour que tu ne connaissais pas.",
+  solo:"Quel chemin du carrefour t'attire le plus aujourd'hui ? Et lequel ne t'attire pas du tout ?",
+  duo:"Chacun désigne le chemin qu'il imagine pour l'autre. Êtes-vous surpris ?"},
+
+temple:{ name:"LE TEMPLE DES MYTHES", theme:"Vrai ou faux ?", bio:"bio-f", temple:true,
+  info:`<h3>📜 Parchemin : attention aux idées reçues !</h3>
+  <ul>
+   <li>On entend beaucoup de choses sur l'orientation : « le bac pro, ça ne mène à rien », « sans BTS, pas de travail », « l'apprentissage c'est pour les manuels »…</li>
+   <li>Pour vérifier une info : sources officielles (Onisep, Parcoursup, service-public.fr), Psy-EN, professeurs, professionnels.</li>
+   <li>Retenez : <b>il y a toujours plusieurs chemins</b>, et on a le droit de changer d'avis, de se réorienter ou de reprendre des études plus tard.</li>
+  </ul>`,
+  intro:"Le temple est rempli d'idées reçues. Vrai ou faux ? Trompez-vous et le sol s'effondre !",
+  type:"tf", count:[6,8,10],
+  pool:[
+   ["Il faut absolument savoir quel métier on veut faire avant le bac.",false,"all"],
+   ["Le bac pro permet d'entrer dans la vie active OU de poursuivre ses études.",true,"all"],
+   ["Les appréciations des PFMP n'intéressent ni les employeurs ni les formations.",false,"all"],
+   ["On peut travailler quelques années puis reprendre des études.",true,"all"],
+   ["Après un bac pro MCV, on peut poursuivre en BTS.",true,"etudes"],
+   ["Avec un avis favorable du conseil de classe, un bachelier pro est prioritaire pour entrer en BTS.",true,"etudes"],
+   ["Avec un bac pro, on ne peut jamais dépasser bac+2.",false,"etudes"],
+   ["Une année en classe passerelle garantit une place en BTS.",false,"etudes"],
+   ["Sur Parcoursup, il faut classer ses vœux par ordre de préférence.",false,"etudes"],
+   ["Sur Parcoursup, on peut formuler jusqu'à 10 vœux (hors apprentissage).",true,"etudes"],
+   ["Sans aucune proposition sur Parcoursup, la CAES peut aider à trouver une formation.",true,"etudes"],
+   ["Le salaire net est plus élevé que le salaire brut.",false,"vie"],
+   ["Envoyer son CV à une entreprise sans offre publiée s'appelle une candidature spontanée.",true,"vie"],
+   ["Le réseau (famille, tuteurs de PFMP) ne sert à rien pour trouver un emploi.",false,"vie"],
+   ["Un employeur peut refuser un candidat à cause de sa religion.",false,"vie"],
+   ["À la fin d'un CDD, une prime de fin de contrat est en général versée.",true,"vie"],
+   ["L'apprenti est un salarié payé.",true,"alt"],
+   ["La formation en apprentissage est payante pour l'apprenti.",false,"alt"],
+   ["L'apprentissage ne concerne que les métiers manuels.",false,"alt"],
+   ["En apprentissage, on a droit à 5 semaines de congés payés par an.",true,"alt"],
+   ["On peut préparer un BTS en apprentissage.",true,"alt"],
+   ["Dans l'entreprise, l'apprenti est suivi par un maître d'apprentissage.",true,"alt"],
+   ["La période d'essai permet à l'employeur et au salarié de vérifier que le poste convient.",true,"vie"]
+  ],
+  hints:["Méfiez-vous des phrases avec « jamais », « absolument », « garantit », « ne sert à rien ».","Brut = avant cotisations, net = ce qu'on touche : le net est plus petit."],
+  mission:"Dans Hello Charly, note ton prochain pas concret (un salon, une porte ouverte, un pro à interroger) et ajoute-le à tes objectifs.",
+  solo:"Quelle idée reçue avais-tu avant ce jeu ?",
+  duo:"Chacun dit à l'autre l'idée reçue qu'il avait. Laquelle vous a le plus surpris ?"}
+};
+
+
+
+/* ---------------- SALLES AJOUTÉES (version multi-séances) ---------------- */
+Object.assign(ROOMS,{
+boussole:{ name:"LA BOUSSOLE", theme:"Mes envies", bio:"bio-g", type:"boussole",
+  info:`<h3>📜 Parchemin : la Boussole de l'orientation</h3>
+  <ul>
+   <li>La Boussole pose <b>14 questions</b> sur tes envies, ta façon d'apprendre, ta situation et tes PFMP.</li>
+   <li>Elle calcule un score pour 3 chemins : <b>🎓 poursuite d'études</b>, <b>💼 vie active</b>, <b>🔁 alternance</b>.</li>
+   <li>⚠️ Ce n'est <b>pas un test qui décide pour toi</b> : c'est un point de départ pour réfléchir et en parler avec ton professeur·e ou le/la Psy-EN.</li>
+   <li>Elle repère aussi des <b>points à creuser</b> (mobilité, méthode de travail, plan B…), qui seront notés dans ton carnet de bord.</li>
+   <li>Réponds honnêtement : il n'y a ni bonne ni mauvaise réponse.</li>
+  </ul>`,
+  mission:"Dans Hello Charly, commence ton profil : renseigne ce que tu aimes et ce qui te motive.",
+  solo:"Ton résultat te surprend-il ? Explique pourquoi en 2 phrases.",
+  duo:"Comparez vos deux boussoles : en quoi vos envies se ressemblent-elles ou diffèrent-elles ?",
+  hints:[]},
+
+talents:{ name:"LA SALLE DES TALENTS", theme:"Mes qualités et compétences", bio:"bio-h",
+  info:`<h3>📜 Parchemin : savoir-faire et savoir-être</h3>
+  <div class="info-grid">
+   <div class="info-card"><b>SAVOIRS</b>Ce que tu connais : les produits, les techniques de vente, le droit de la consommation…</div>
+   <div class="info-card"><b>SAVOIR-FAIRE</b>Ce que tu sais FAIRE (les compétences) : encaisser, mettre en rayon, réaliser un inventaire, présenter un produit, utiliser un logiciel…</div>
+   <div class="info-card"><b>SAVOIR-ÊTRE</b>Ta façon d'être (les qualités) : ponctualité, sens du contact, patience, esprit d'équipe, présentation soignée…</div>
+  </div>
+  <ul>
+   <li>Dans le commerce, les recruteurs regardent beaucoup le <b>savoir-être</b> : sourire, politesse, ponctualité, dynamisme, sens du service.</li>
+   <li>Une qualité se <b>prouve avec un exemple</b> : « Ponctuel·le : aucun retard pendant mes 12 semaines de PFMP » vaut mieux que « je suis ponctuel ».</li>
+   <li>Tes <b>PFMP</b>, ton job d'été, ton sport ou ton bénévolat sont des preuves de tes talents.</li>
+  </ul>`,
+  intro:"Les coffres des talents sont mélangés. Rangez chaque élément : est-ce un savoir-être (une qualité) ou un savoir-faire (une compétence) ?",
+  type:"bucket", buckets:["😊 Savoir-être","🛠️ Savoir-faire"], count:[6,9,14],
+  items:[["Être ponctuel·le","😊 Savoir-être"],["Avoir le sens du contact","😊 Savoir-être"],["Être patient·e avec les clients","😊 Savoir-être"],["Avoir l'esprit d'équipe","😊 Savoir-être"],["Être curieux·se","😊 Savoir-être"],["S'adapter aux imprévus","😊 Savoir-être"],["Avoir une présentation soignée","😊 Savoir-être"],["Tenir une caisse et encaisser","🛠️ Savoir-faire"],["Mettre en rayon selon les règles du merchandising","🛠️ Savoir-faire"],["Réaliser un inventaire","🛠️ Savoir-faire"],["Présenter les caractéristiques d'un produit","🛠️ Savoir-faire"],["Utiliser un logiciel de gestion des stocks","🛠️ Savoir-faire"],["Réaliser une vitrine","🛠️ Savoir-faire"],["Traiter une réclamation selon la procédure du magasin","🛠️ Savoir-faire"]],
+  hints:["Un savoir-faire commence souvent par un verbe d'action technique : encaisser, réaliser, utiliser…","Un savoir-être décrit un comportement : être ponctuel, patient, curieux…"],
+  mission:"Dans Hello Charly, complète ton profil avec tes qualités et tes compétences si l'appli te le propose.",
+  solo:"Écris 2 savoir-être et 2 savoir-faire que tu as prouvés en PFMP, chacun avec un exemple.",
+  duo:"Chacun cite 2 qualités de l'autre, avec un exemple vécu en classe ou en PFMP."},
+
+conditions:{ name:"LE MARCHÉ DE NUIT", theme:"Conditions de travail", bio:"bio-i",
+  info:`<h3>📜 Parchemin : travailler dans le commerce, concrètement</h3>
+  <div class="info-grid">
+   <div class="info-card"><b>⏰ HORAIRES</b>Le travail le samedi est très fréquent ; certains commerces ouvrent le dimanche ou en soirée. Les plannings peuvent changer d'une semaine à l'autre.</div>
+   <div class="info-card"><b>📅 SAISONS</b>Soldes, rentrée, fêtes de fin d'année : périodes de forte activité. Beaucoup de jobs saisonniers (CDD).</div>
+   <div class="info-card"><b>💶 SALAIRE</b>Le SMIC est le salaire minimum légal. Dans la vente, on peut toucher des primes ou des commissions sur ses ventes. Une convention collective fixe des règles pour chaque secteur.</div>
+   <div class="info-card"><b>💪 PHYSIQUE</b>Station debout, port de charges, mise en rayon : le corps travaille aussi !</div>
+   <div class="info-card"><b>📈 ÉVOLUTION</b>Avec l'expérience et la formation interne, on peut évoluer : employé·e → adjoint·e → manager·euse. Un BTS accélère souvent cette évolution.</div>
+   <div class="info-card"><b>💻 NUMÉRIQUE</b>Click & collect, vente en ligne, réseaux sociaux, caisses automatiques : les métiers changent et demandent de nouvelles compétences.</div>
+  </div>`,
+  intro:"Au marché de nuit, les marchands racontent leur quotidien. Vrai ou faux ?",
+  type:"tf", count:[6,8,10],
+  items:[["Dans le commerce, travailler le samedi est fréquent.",true],["Le SMIC est le salaire minimum légal en France.",true],["Un vendeur peut toucher des primes ou des commissions sur ses ventes.",true],["Les horaires dans le commerce sont toujours 9 h-17 h du lundi au vendredi.",false],["Les soldes et les fêtes de fin d'année sont des périodes calmes.",false],["Dans la grande distribution, on peut évoluer vers un poste de manager avec l'expérience.",true],["Les métiers du commerce n'évoluent pas avec le numérique.",false],["Le click & collect crée de nouvelles tâches en magasin.",true],["Travailler en magasin n'est jamais physique.",false],["Les jobs saisonniers sont souvent des CDD.",true]],
+  hints:["Pensez à vos PFMP : quels jours et quelles heures travailliez-vous ?","Les phrases avec « toujours » et « jamais » sont souvent fausses."],
+  mission:"Dans Hello Charly, ouvre une fiche métier du commerce et repère les conditions de travail (horaires, évolution, salaire).",
+  solo:"Quelles conditions de travail seraient pour toi un avantage ? Lesquelles un frein ?",
+  duo:"Débat : « Travailler le samedi, c'est un vrai problème. » L'un est pour, l'autre contre !"},
+
+boss:{ name:"LA GRANDE ÉPREUVE", theme:"Révision générale", bio:"bio-c", type:"quiz", boss:true,
+  info:`<h3>📜 Parchemin : la Grande Épreuve</h3>
+  <p>Le gardien du Portail vérifie que vous avez retenu l'essentiel des 4 mondes précédents : métiers, BTS, durées des formations, contrats, entretien d'embauche.</p>
+  <p>Pas de nouveau parchemin ici : c'est le moment de montrer ce que vous savez ! Vous pouvez consulter votre carnet de bord.</p>`,
+  intro:"Le gardien du Portail vous pose des questions sur tout ce que vous avez appris.",
+  count:[8,10,14], items:[],
+  hints:["Relisez votre carnet de bord : il contient vos réponses aux défis précédents.","Pour les BTS : MCO = magasin, NDRC = prospection et relation client."],
+  mission:"Dans Hello Charly, vérifie une information dont tu n'étais pas sûr·e pendant la Grande Épreuve.",
+  solo:"Quelle information de ces 5 séances te sera la plus utile ? Pourquoi ?",
+  duo:"Chacun explique à l'autre ce qu'il a appris de plus important pendant ces séances."},
+
+projet:{ name:"LE PORTAIL DU PROJET", theme:"Mon plan A et mon plan B", bio:"bio-f", type:"form",
+  info:`<h3>📜 Parchemin : construire son projet</h3>
+  <ul>
+   <li>Un bon projet a un <b>plan A</b> (ce que je veux vraiment) et un <b>plan B</b> (une solution si le plan A ne marche pas, ou pas tout de suite).</li>
+   <li>Exemple : Plan A = BTS MCO en lycée ; Plan B = BTS MCO en apprentissage, ou un certificat de spécialisation, ou un emploi de vendeur·se puis un BTS plus tard.</li>
+   <li>Un projet avance par des <b>actions concrètes et datées</b> : « aller aux portes ouvertes du lycée X en février », « demander à mon tuteur de PFMP s'il prend des apprentis »…</li>
+   <li>Note aussi une <b>personne ressource</b> qui peut t'aider : professeur·e principal·e, Psy-EN, tuteur de PFMP, conseiller de la Mission locale…</li>
+   <li><b>Calendrier :</b> en 1ère, on explore et on réussit ses PFMP. En Terminale, on décide (Parcoursup de janvier à avril, recherche d'entreprise dès le printemps pour l'alternance, candidatures d'emploi avant l'été).</li>
+   <li>Un projet peut changer : c'est normal ! L'important est d'avoir un cap.</li>
+  </ul>`,
+  intro:"Pour franchir le Portail, chacun doit écrire son projet. Remplissez tous les champs.",
+  mission:"Dans Hello Charly, ajoute ton plan A et ton plan B à tes objectifs, et partage-les avec ton professeur·e si l'appli le permet.",
+  solo:"Relis ton projet : qu'est-ce qui te paraît le plus difficile ? Qui peut t'aider ?",
+  duo:"Chacun relit le projet de l'autre et pose une question pour l'aider à le préciser.",
+  hints:[]}
+});
+
+/* Boussole : 14 questions, 3 scores + points à creuser */
+const FLAGS = {
+  methode:"Travailler tes méthodes de travail personnel (devoirs, révisions) : utile avant un BTS.",
+  mobilite:"Chercher des formations ou des emplois accessibles près de chez toi (transports).",
+  permis:"Penser au permis de conduire : souvent demandé dans le commerce.",
+  domaine:"Explorer d'autres domaines que le commerce (d'autres BTS, d'autres métiers).",
+  famille:"En parler en famille : présenter les différents chemins et leurs avantages.",
+  planB:"Construire un plan B (Monde 5).",
+  confiance:"Faire le point avec ton professeur·e principal·e ou le/la Psy-EN sur tes résultats et tes chances.",
+  argent:"Te renseigner sur les aides financières (bourses) et sur l'alternance, qui est rémunérée."
+};
+const BQ = [
+ ["Après le bac, l'idée de continuer les cours…",[["Ça me motive, j'aime apprendre",{etudes:2}],["Oui, mais pas QUE des cours",{alt:2}],["J'ai surtout envie d'arrêter l'école",{vie:2}]]],
+ ["Avoir un salaire rapidement, pour toi, c'est…",[["Très important",{vie:2,alt:1}],["Important, mais je peux étudier en même temps",{alt:2}],["Pas prioritaire pour l'instant",{etudes:2}]]],
+ ["Pendant tes PFMP…",[["J'ai adoré le terrain, je me sens prêt·e",{vie:2,alt:1}],["J'ai aimé, mais je veux plus de responsabilités plus tard",{etudes:1,alt:2}],["Ça m'a montré que je veux découvrir autre chose",{etudes:1},"domaine"]]],
+ ["Au lycée, tes résultats et ta motivation…",[["Bons et réguliers",{etudes:2}],["Moyens, mais je m'accroche",{alt:1,etudes:1}],["Difficiles, j'apprends mieux en faisant",{alt:1,vie:1},"confiance"]]],
+ ["Dans 5 ans, tu te vois plutôt…",[["Responsable d'un magasin ou d'une équipe",{etudes:1,alt:1}],["Dans un métier que j'aime, avec de l'expérience",{vie:2}],["Je n'en ai aucune idée !",{}]]],
+ ["Travailler seul·e le soir (devoirs, révisions)…",[["Ça ne me dérange pas",{etudes:2}],["Seulement si c'est utile pour mon métier",{alt:1,etudes:1}],["J'ai vraiment du mal",{vie:1,alt:1},"methode"]]],
+ ["Avoir des horaires d'entreprise (samedis, plannings) dès 18 ans…",[["Ça me va",{vie:2,alt:1}],["Oui, si j'apprends en même temps",{alt:2}],["Je préfère d'abord garder le rythme scolaire",{etudes:2}]]],
+ ["Faire beaucoup de trajet, ou partir de chez toi, pour une formation…",[["Pas de problème",{etudes:1}],["Un peu, mais pas trop loin",{}],["Impossible pour moi",{vie:1,alt:1},"mobilite"]]],
+ ["Le permis de conduire…",[["Je l'ai, ou je le passe bientôt",{vie:1,alt:1}],["J'y pense pour plus tard",{}],["Ce n'est pas prévu",{},"permis"]]],
+ ["Pour apprendre quelque chose de nouveau, tu préfères…",[["Lire, écouter un cours, prendre des notes",{etudes:2}],["Regarder quelqu'un faire, puis essayer",{alt:2}],["Me lancer directement sur le terrain",{vie:2}]]],
+ ["Être responsable d'autres personnes plus tard…",[["Oui, ça me motive",{etudes:1,alt:1}],["Peut-être un jour",{}],["Non, je préfère être bien dans mon poste",{vie:1}]]],
+ ["Le commerce et la vente, pour toi…",[["C'est vraiment mon domaine",{}],["J'aime bien, mais d'autres domaines m'attirent",{},"domaine"],["Je veux changer de domaine",{etudes:1},"domaine"]]],
+ ["Ta famille, à propos de l'après-bac…",[["M'encourage à continuer mes études",{etudes:1}],["Préfère que je travaille vite",{vie:1,alt:1},"famille"],["On n'en a pas encore parlé",{},"famille"]]],
+ ["Si ton projet ne marche pas tout de suite, tu…",[["Ai déjà une solution de secours",{}],["Chercherais une autre solution à ce moment-là",{},"planB"],["Ne sais pas du tout",{},"planB"]]]
+];
+const BMAX = (()=>{const m={etudes:0,vie:0,alt:0};BQ.forEach(([,o])=>{for(const k in m)m[k]+=Math.max(...o.map(x=>x[1][k]||0));});return m;})();
+
+/* Grande Épreuve : questions générées à partir des autres salles */
+function buildBoss(n){
+  const out=[];
+  ROOMS.mine.items.forEach(it=>out.push([it[0],it[1],it[2]]));
+  ROOMS.entretien.items.forEach(it=>out.push([it[0],it[1],it[2]]));
+  const btsNames=ROOMS.bts.choices;
+  ROOMS.bts.items.forEach(it=>{const d=shuffle(btsNames.filter(x=>x!==it[1])).slice(0,3);out.push(["Quel BTS ? « "+it[0]+" »",[it[1],...d],0]);});
+  ROOMS.forge.items.forEach(it=>out.push(["Combien de temps dure : "+it[0]+" ?",["1 an","2 ans","3 ans"],["1 an","2 ans","3 ans"].indexOf(it[1])]));
+  const cs=ROOMS.contrats.choices;
+  ROOMS.contrats.items.forEach(it=>{const d=shuffle(cs.filter(x=>x!==it[1])).slice(0,3);out.push(["De quoi parle-t-on ? « "+it[0]+" »",[it[1],...d],0]);});
+  return shuffle(out).slice(0,n);
+}
+
+/* ---------------- MONDES = SÉANCES ---------------- */
+const WORLDS = [
+ {n:1,name:"LE SPAWN",sub:"Se connaître",word:"MOI",rooms:["boussole","miroir","talents"],bio:"bio-e",key:"",
+  obj:"Identifier ses envies, ses centres d'intérêt (RIASEC), ses qualités et ses compétences, notamment à partir des PFMP.",
+  debrief:["Votre résultat de Boussole correspond-il à ce que vous pensiez ?","Quel profil RIASEC domine dans la classe ?","Quelle qualité avez-vous prouvée en PFMP, et comment ?"]},
+ {n:2,name:"LES MINES",sub:"Explorer les métiers",word:"PRO",rooms:["mine","conditions","aides"],bio:"bio-b",key:"LAPIS",
+  obj:"Découvrir les métiers du commerce et leurs conditions de travail réelles ; savoir à qui s'adresser pour s'informer.",
+  debrief:["Quel métier vous a surpris ?","Quelles conditions de travail sont un frein pour vous ?","Qui allez-vous contacter (CIO, Mission locale…) ?"]},
+ {n:3,name:"LE VILLAGE",sub:"Les études après le bac pro",word:"VOIE",rooms:["carrefour","bts","forge","parcoursup"],bio:"bio-d",key:"EMERAUDE",
+  obj:"Connaître tous les chemins après le bac pro MCV, les BTS accessibles, la durée des formations et le calendrier Parcoursup.",
+  debrief:["Quel BTS vous attire ? En lycée ou en apprentissage ?","Que signifie un avis favorable du conseil de classe ?","Que faire si on n'a aucune proposition sur Parcoursup ?"]},
+ {n:4,name:"LA FORTERESSE",sub:"L'emploi et l'alternance",word:"CLES",rooms:["contrats","alternance","cv","entretien"],bio:"bio-i",key:"OBSIDIENNE",
+  obj:"Comprendre les contrats de travail et l'apprentissage ; savoir rédiger un CV et se préparer à un entretien.",
+  debrief:["CDI, CDD, intérim, apprentissage : lequel vous correspond ?","Quelle erreur de CV voyez-vous souvent ?","Jeu de rôle d'entretien devant la classe (volontaires)."]},
+ {n:5,name:"LE PORTAIL",sub:"Mon projet",word:"CAP",rooms:["temple","boss","projet"],bio:"bio-f",key:"QUARTZ",
+  obj:"Déconstruire les idées reçues, réviser l'ensemble, et formaliser un projet personnel avec un plan A, un plan B et des actions datées.",
+  debrief:["Lecture de quelques plans A / plans B (volontaires).","Quelle est votre prochaine action concrète, et quand ?","Qu'est-ce qui a changé dans votre projet depuis le Monde 1 ?"]}
+];
+const RANKS=["Apprenti·e","Bois","Pierre","Fer","Or","Diamant"];
+
+
+/* =========================================================
+   OUTILS
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const SCREENS=["home","s1","s2","worldmap","game","carnet","prof"];
+const show = id => { SCREENS.forEach(x=>$("#"+x).classList.toggle("hidden",x!==id)); window.scrollTo({top:0}); };
+const fmtT = s => `${Math.floor(s/60)} min ${String(s%60).padStart(2,"0")} s`;
+const PATH_LBL = {etudes:"🎓 Poursuite d'études",vie:"💼 Vie active",alt:"🔁 Alternance",decouverte:"🧭 Découverte (tous les chemins)"};
+const DIFFS = [
+  {name:"FACILE",ico:"🟢",hearts:10,hints:2,time:0,show:true},
+  {name:"NORMAL",ico:"🟠",hearts:6,hints:1,time:55*60,show:true},
+  {name:"EXPERT",ico:"🔴",hearts:3,hints:0,time:45*60,show:false}
+];
+
+/* ---- code de sauvegarde (non chiffré : une simple empreinte détecte les modifications) ---- */
+const SALT="oc-mcva-2026";
+function hash(str){ let h=5381; for(let i=0;i<str.length;i++){ h=((h<<5)+h+str.charCodeAt(i))>>>0; } return h.toString(16).padStart(8,"0"); }
+function b64e(str){ const bytes=new TextEncoder().encode(str); let bin=""; for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]); return btoa(bin); }
+function b64d(b){ const bin=atob(b); const bytes=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); return new TextDecoder().decode(bytes); }
+function makeCode(g){ const j=JSON.stringify(g); return "OC2-"+b64e(j)+"-"+hash(j+SALT); }
+function readCode(code){
+  const m=/OC2-([A-Za-z0-9+/=]+)-([0-9a-f]{8})/.exec(code||""); if(!m) return {err:"Code introuvable ou incomplet."};
+  let j; try{ j=b64d(m[1]); }catch(e){ return {err:"Code abîmé (copie incomplète ?)."}; }
+  if(hash(j+SALT)!==m[2]) return {err:"Code modifié ou incomplet : il ne peut pas être lu."};
+  try{ const g=JSON.parse(j); if(!g||g.v!==2||!g.id) throw 0; return {g}; }catch(e){ return {err:"Code illisible."}; }
+}
+
+/* ---- CODE COURT : prénom(s).classe.XXXX-XXXX-… ----
+   Contient : identifiant, mode, chemin, piste de la Boussole, et pour chaque monde joué :
+   terminé ?, salle atteinte, difficulté, temps (min), erreurs, salles bâclées, défis trop courts.
+   Ne contient PAS les réponses écrites (voir le code complet). */
+const B32="0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+const PATHS_I=["etudes","vie","alt","decouverte"], WISH_I=["etudes","vie","alt","indecis"];
+const normName = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z\-]/g,"").slice(0,16)||"X";
+const normCls  = s => String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,10);
+const capName  = s => s.toLowerCase().replace(/(^|-)([a-z])/g,(m,a,b)=>a+b.toUpperCase());
+function worldDerived(g,n){
+  const w=WORLDS[n-1], wi=g.worlds[n];
+  const rush=(wi.stats||[]).filter(s=>s&&s.t<60&&!["projet","boussole"].includes(s.k)).length;
+  const shortN=w.rooms.filter(r=>g.notes&&g.notes[r]&&g.notes[r].trim().split(/\s+/).length<5).length;
+  return {rush:Math.min(3,rush),shortN:Math.min(3,shortN)};
+}
+function makeShort(g){
+  if(g.sid===undefined) g.sid=parseInt(hash(g.id),16)%4096;
+  let bits="";
+  const put=(v,n)=>{ v=Math.max(0,Math.min((1<<n)-1,Math.round(v||0))); bits+=v.toString(2).padStart(n,"0"); };
+  put(g.sid,12); put(g.mode-1,1); put(PATHS_I.indexOf(g.path),2); put(Math.max(0,WISH_I.indexOf(g.wish)),2);
+  g.pl.forEach((p,i)=>{ const b=g.bous&&g.bous[i]; put(b?["etudes","vie","alt"].indexOf(b.best):3,2); });
+  let nW=0; for(let n=1;n<=5;n++) if(g.worlds[n]&&(g.worlds[n].done||g.worlds[n].lv)) nW=n;
+  put(nW,3);
+  for(let n=1;n<=nW;n++){
+    const wi=g.worlds[n]||{lv:0,done:false,t:0,err:0,d:0}, x=wi.done||wi.lv?worldDerived(g,n):{rush:0,shortN:0};
+    put(wi.done?1:0,1); put(wi.done?0:wi.lv,2); put(wi.d||0,2); put(Math.ceil((wi.t||0)/60),6); put(wi.err,5); put(x.rush,2); put(x.shortN,2);
+  }
+  while(bits.length%5) bits+="0";
+  const names=g.pl.map(normName).join("+"), cls=normCls(g.cls);
+  const chk=(parseInt(hash(bits+names+cls+SALT),16)%1024).toString(2).padStart(10,"0");
+  bits=chk+bits;
+  let out=""; for(let i=0;i<bits.length;i+=5) out+=B32[parseInt(bits.slice(i,i+5),2)];
+  return `${names}.${cls}.${out.match(/.{1,4}/g).join("-")}`;
+}
+function readShort(code){
+  const m=/([A-Z\-]+(?:\+[A-Z\-]+)?)\.([A-Z0-9]*)\.([0-9A-Z]{4}(?:-[0-9A-Z]{1,4})*)/.exec(String(code||"").toUpperCase());
+  if(!m) return {err:"Code introuvable. Il ressemble à : PRENOM.CLASSE.XXXX-XXXX"};
+  const names=m[1], cls=m[2], body=m[3].replace(/-/g,"").replace(/O/g,"0").replace(/[IL]/g,"1");
+  let bits=""; for(const ch of body){ const v=B32.indexOf(ch); if(v<0) return {err:"Code mal recopié."}; bits+=v.toString(2).padStart(5,"0"); }
+  const chk=bits.slice(0,10), rest=bits.slice(10);
+  if((parseInt(hash(rest+names+cls+SALT),16)%1024).toString(2).padStart(10,"0")!==chk) return {err:"Code mal recopié ou modifié : vérifiez chaque caractère."};
+  let p=0; const get=n=>{ const v=parseInt(rest.slice(p,p+n)||"0",2); p+=n; return v; };
+  try{
+    const pl=names.split("+").map(capName);
+    const g={v:2,cls,pl,worlds:{},notes:{},prof:pl.map(()=>[]),projet:pl.map(()=>({})),bous:[],unlocked:[1],short:true};
+    g.sid=get(12); g.mode=get(1)+1; g.path=PATHS_I[get(2)]; g.wish=WISH_I[get(2)];
+    if(g.mode!==pl.length) throw 0;
+    pl.forEach(()=>{ const b=get(2); g.bous.push(b<3?{best:["etudes","vie","alt"][b],pct:null,flags:[]}:null); });
+    g.bous=g.bous.filter(Boolean).length?g.bous.map(b=>b||{best:"decouverte",pct:null,flags:[]}):[];
+    const nW=get(3); if(nW>5) throw 0;
+    for(let n=1;n<=nW;n++){
+      const done=get(1), lv=get(2), d=get(2), tmin=get(6), err=get(5), rush=get(2), shortN=get(2);
+      const wi={done:!!done,lv:done?WORLDS[n-1].rooms.length:lv,d,t:tmin*60,err,hints:0,deaths:0,stats:[],rush,shortN};
+      wi.score=done?Math.max(50,600+[0,150,300][d]-err*15+(DIFFS[d].time?Math.floor((DIFFS[d].time-wi.t)/10):0)):0;
+      g.worlds[n]=wi; if(!g.unlocked.includes(n)) g.unlocked.push(n);
+    }
+    g.id="s"+g.sid+"-"+names+"-"+cls;
+    return {g};
+  }catch(e){ return {err:"Code illisible."}; }
+}
+/* lit un code court OU complet */
+function readAny(code){ return /OC2-/.test(code||"") ? readCode(code) : readShort(code); }
+function progressOf(g){ return Object.values(g.worlds||{}).reduce((a,w)=>a+(w.done?10:(w.lv||0)),0); }
+
+/* ---- sauvegarde automatique sur l'appareil ---- */
+const LS_KEY="oc2_saves";
+function lsAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ return {}; } }
+function lsPut(g){ try{ const a=lsAll(); a[g.id]=g; localStorage.setItem(LS_KEY,JSON.stringify(a)); }catch(e){} }
+function lsDel(id){ try{ const a=lsAll(); delete a[id]; localStorage.setItem(LS_KEY,JSON.stringify(a)); }catch(e){} }
+
+/* =========================================================
+   ÉTAT
+   ========================================================= */
+let G=null;   // sauvegarde complète (toutes les séances)
+let W=null;   // monde en cours
+let cur=null; // salle en cours
+let timerId=null;
+const NEW = {mode:null};
+
+function dashKey(g){ if(g.sid===undefined) g.sid=parseInt(hash(g.id),16)%4096; return "s"+g.sid+"-"+g.pl.map(normName).join("+")+"-"+normCls(g.cls); }
+/* fusionne un code (court ou complet) avec une partie déjà présente sur l'appareil */
+function mergeSave(g){
+  const local=Object.values(lsAll()).find(x=>dashKey(x)===dashKey(g));
+  if(!local) { if(g.short){ g.created=new Date().toISOString(); } return g; }
+  if(!g.short) return progressOf(g)>=progressOf(local)?g:local;
+  if(progressOf(g)<=progressOf(local)) return local;
+  for(const n in g.worlds){ const a=local.worlds[n]||{}, b=g.worlds[n]; if(!local.worlds[n]||b.done&&!a.done||(!a.done&&b.lv>a.lv)) local.worlds[n]={...a,...b,stats:a.stats||[]}; }
+  g.unlocked.forEach(n=>{ if(!local.unlocked.includes(n)) local.unlocked.push(n); });
+  local.path=g.path; return local;
+}
+function newSave(){
+  return {v:2,id:Math.random().toString(36).slice(2,12),sid:Math.floor(Math.random()*4096),cls:"",pl:[],mode:1,wish:null,path:null,
+    worlds:{},unlocked:[1],prof:[],bous:[],projet:[],notes:{},created:new Date().toISOString(),updated:null};
+}
+function wInfo(n){ return G.worlds[n] || (G.worlds[n]={lv:0,done:false,stats:[],err:0,hints:0,deaths:0,t:0,score:0,d:null}); }
+function totalXP(g){ return Object.values(g.worlds||{}).reduce((a,w)=>a+(w.score||0),0); }
+function nDone(g){ return Object.values(g.worlds||{}).filter(w=>w.done).length; }
+function persist(){ G.updated=new Date().toISOString(); lsPut(G); }
+
+/* =========================================================
+   ACCUEIL
+   ========================================================= */
+function renderHome(){
+  const saves=Object.values(lsAll()).sort((a,b)=>(b.updated||b.created).localeCompare(a.updated||a.created));
+  $("#localSaves").innerHTML = saves.length ? `<h3>Parties sur cet appareil</h3>`+saves.slice(0,12).map(g=>
+    `<div class="item order-row"><span class="txt"><b>${esc(g.pl.join(" & "))}</b> ${g.cls?`(${esc(g.cls)})`:""} · ${nDone(g)}/5 mondes · ${totalXP(g)} XP</span>
+     <button class="btn mini green" data-res="${g.id}">REPRENDRE</button><button class="btn mini" data-delsave="${g.id}">✖</button></div>`).join("") : "";
+  $("#localSavesWrap").classList.toggle("hidden",!saves.length);
+  $$("[data-res]").forEach(b=>b.onclick=()=>{ G=lsAll()[b.dataset.res]; openMap(); });
+  $$("[data-delsave]").forEach(b=>b.onclick=()=>{ if(b.dataset.armed){ lsDel(b.dataset.delsave); renderHome(); } else { b.dataset.armed=1; b.textContent="SÛR ?"; } });
+}
+$("#newBtn").onclick=()=>{ G=newSave(); show("s1"); };
+$("#resumeBtn").onclick=()=>{
+  const r=readAny($("#resumeCode").value.trim());
+  if(r.err){ $("#mHome").textContent=r.err; return; }
+  G=mergeSave(r.g); lsPut(G); openMap();
+};
+
+/* ---- étape 1 : solo / binôme ---- */
+$$("#s1 .card").forEach(c=>c.onclick=()=>{
+  $$("#s1 .card").forEach(x=>x.classList.remove("sel")); c.classList.add("sel");
+  NEW.mode=+c.dataset.mode; $("#names").classList.remove("hidden"); $("#p2wrap").classList.toggle("hidden",NEW.mode===1); $("#m1").textContent="";
+});
+$("#back1").onclick=()=>{ renderHome(); show("home"); };
+$("#go1").onclick=()=>{
+  if(!NEW.mode){$("#m1").textContent="Choisissez solo ou binôme.";return;}
+  const p1=$("#p1").value.trim(), p2=$("#p2").value.trim();
+  if(!p1||(NEW.mode===2&&!p2)){$("#m1").textContent="Écrivez le(s) prénom(s).";return;}
+  G.mode=NEW.mode; G.pl=NEW.mode===1?[p1]:[p1,p2]; G.cls=$("#cls").value.trim().toUpperCase();
+  G.prof=G.pl.map(()=>[]); G.projet=G.pl.map(()=>({}));
+  $("#s2title").textContent = G.mode===1?"Après ton bac pro, tu te vois plutôt…":"Après votre bac pro, vous vous voyez plutôt…";
+  $("#s2duo").classList.toggle("hidden",G.mode===1);
+  show("s2");
+};
+/* ---- étape 2 : le projet de départ ---- */
+$$("#s2 .card").forEach(c=>c.onclick=()=>{$$("#s2 .card").forEach(x=>x.classList.remove("sel"));c.classList.add("sel");G.wish=c.dataset.path;$("#m2").textContent="";});
+$("#back2").onclick=()=>show("s1");
+$("#go2").onclick=()=>{
+  if(!G.wish){$("#m2").textContent="Choisissez une réponse.";return;}
+  G.path = G.wish==="indecis" ? "decouverte" : G.wish;
+  persist(); openMap();
+};
+
+/* =========================================================
+   CARTE DES MONDES
+   ========================================================= */
+function openMap(){
+  clearInterval(timerId);
+  const done=nDone(G);
+  $("#mapHead").innerHTML=`<b>${esc(G.pl.join(" & "))}</b> ${G.cls?`· ${esc(G.cls)}`:""} · ${PATH_LBL[G.path]||""}<br>
+    Rang : <b>${RANKS[done]}</b> · ${totalXP(G)} XP · ${done}/5 mondes terminés`;
+  $("#worlds").innerHTML=WORLDS.map(w=>{
+    const wi=G.worlds[w.n], unlocked=G.unlocked.includes(w.n), prevDone=w.n===1||(G.worlds[w.n-1]&&G.worlds[w.n-1].done);
+    let status, body="";
+    if(wi&&wi.done){ status="✅ TERMINÉ"; body=`<div class="small">${wi.score} XP · ${fmtT(wi.t)}</div><button class="btn mini" data-replay="${w.n}">REJOUER</button>`; }
+    else if(unlocked&&prevDone){ status=wi&&wi.lv?`⏸ SALLE ${wi.lv+1}/${w.rooms.length}`:"▶ OUVERT"; body=`<button class="btn green" data-play="${w.n}">${wi&&wi.lv?"CONTINUER":"ENTRER"}</button>`; }
+    else if(!prevDone){ status="🔒 Termine d'abord le monde "+(w.n-1); }
+    else { status="🔑 VERROUILLÉ"; body=`<input type="text" class="keyin" data-k="${w.n}" placeholder="clé du prof" style="max-width:180px;font-size:20px"><button class="btn mini gold" data-key="${w.n}">OUVRIR</button><div class="msg err small" id="km${w.n}"></div>`; }
+    return `<div class="world ${w.bio}"><div class="px" style="font-size:10px">MONDE ${w.n} · SÉANCE ${w.n}</div><h3>${w.name}</h3><div>${w.sub}</div>
+      <div class="small" style="margin:6px 0">${w.rooms.map(r=>ROOMS[r].theme).join(" · ")}</div><div class="wstat">${status}</div>${body}</div>`;
+  }).join("");
+  $$("[data-key]").forEach(b=>b.onclick=()=>{
+    const n=+b.dataset.key, v=$(`[data-k="${n}"]`).value.trim().toUpperCase();
+    if(v===WORLDS[n-1].key){ G.unlocked.push(n); persist(); openMap(); } else $("#km"+n).textContent="Mauvaise clé.";
+  });
+  $$("[data-play]").forEach(b=>b.onclick=()=>chooseDiff(+b.dataset.play,false));
+  $$("[data-replay]").forEach(b=>b.onclick=()=>chooseDiff(+b.dataset.replay,true));
+  show("worldmap");
+}
+$("#carnetBtn").onclick=()=>openCarnet();
+$("#saveBtn").onclick=()=>openSave("#saveBox");
+$("#quitBtn").onclick=()=>{ G=null; renderHome(); show("home"); };
+
+function chooseDiff(n,replay){
+  const w=WORLDS[n-1], wi=wInfo(n);
+  $("#diffBox").innerHTML=`<div class="panel"><h3>Monde ${n} · ${w.name} – choisissez la difficulté</h3>
+    <p class="small">🎯 Objectif de la séance : ${esc(w.obj)}</p>
+    ${replay?`<p class="small">Rejouer ce monde remplacera votre score précédent (${wi.score} XP) seulement si vous faites mieux. Vos réponses écrites seront conservées.</p>`:""}
+    <div class="grid">${DIFFS.map((d,i)=>`<div class="card" data-dd="${i}"><div class="ico">${d.ico}</div><h3>${d.name}</h3><div class="small">${d.hearts} cœurs · ${d.hints?d.hints+" indice(s) par salle":"aucun indice"} · ${d.time?d.time/60+" min":"pas de chrono"}${d.show?"":" · erreurs non montrées"}</div></div>`).join("")}</div></div>`;
+  $$("[data-dd]").forEach(c=>c.onclick=()=>{ $("#diffBox").innerHTML=""; startWorld(n,+c.dataset.dd,replay); });
+  $("#diffBox").scrollIntoView({behavior:"smooth"});
+}
+
+/* =========================================================
+   MONDE EN COURS
+   ========================================================= */
+function startWorld(n,d,replay){
+  const w=WORLDS[n-1], wi=wInfo(n);
+  const resume = !replay && !wi.done && wi.lv>0;
+  W={n,w,d,D:DIFFS[d],replay,hearts:DIFFS[d].hearts,level:resume?wi.lv:0,
+     stats:resume?[...wi.stats]:[],err:resume?wi.err:0,hints:resume?wi.hints:0,deaths:resume?wi.deaths:0,
+     t0:Date.now(),tPrev:resume?wi.t:0,ended:false};
+  if(!wi.done) wi.d=d;
+  $("#hudTeam").textContent=G.pl.join(" & ").toUpperCase();
+  $("#hudInfo").textContent=`Monde ${n} · ${w.name} · ${W.D.ico} ${W.D.name}`;
+  clearInterval(timerId); timerId=setInterval(tick,1000); tick();
+  show("game"); startRoom();
+}
+const elapsed = () => W.tPrev+Math.floor((Date.now()-W.t0)/1000);
+function tick(){
+  if(!W||W.ended) return;
+  const el=elapsed(), t=W.D.time?Math.max(0,W.D.time-el):el;
+  $("#hudTime").textContent=(W.D.time?"⏳ ":"⏱ ")+String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0");
+  if(W.D.time&&t<=0){ W.ended=true; clearInterval(timerId); saveProgress(); timeOut(); }
+}
+function hud(){
+  $("#hudHearts").innerHTML=Array.from({length:W.D.hearts},(_,i)=>`<span class="heart ${i<W.hearts?"":"off"}"></span>`).join("");
+  $("#hudSlots").innerHTML=[...W.w.word].map((c,i)=>`<div class="slot ${i<W.level?"got":""}">${i<W.level?c:""}</div>`).join("");
+  $("#map").innerHTML=W.w.rooms.map((r,i)=>`<div class="stage ${i<W.level?"done":i===W.level?"cur":""}">${i+1}. ${ROOMS[r].theme}</div>`).join("")+`<div class="stage ${W.level>=W.w.rooms.length?"cur":""}">🔒 Coffre</div>`;
+}
+const P = () => G.pl.length;
+const who = i => P()===2 ? `<span class="who ${(i+W.level)%2?"p2":""}">🎮 ${esc(G.pl[(i+W.level)%2])}</span>` : "";
+$("#hudSave").onclick=()=>{ saveProgress(); openSave("#gameSaveBox"); };
+$("#hudMap").onclick=()=>{ saveProgress(); W.ended=true; openMap(); };
+
+/* progression enregistrée à chaque salle terminée */
+function saveProgress(){
+  if(!W) return;
+  const wi=wInfo(W.n);
+  if(!wi.done){ wi.lv=W.level; wi.stats=W.stats; wi.err=W.err; wi.hints=W.hints; wi.deaths=W.deaths; wi.t=elapsed(); }
+  persist();
+}
+
+function startRoom(){
+  hud();
+  if(W.level>=W.w.rooms.length){ finalChest(); return; }
+  const key=W.w.rooms[W.level], R=ROOMS[key];
+  W.roomStart=Date.now(); W.roomErr=0; W.roomHints=0;
+  let h=`<div class="biome ${R.bio}"><h2>SALLE ${W.level+1} · ${R.name}</h2><div>Avant l'épreuve, lisez le parchemin trouvé à l'entrée.</div></div>
+    <div class="scroll" style="margin-top:14px">${R.info}</div>`;
+  if(R.self){
+    h+=`<div class="panel"><h3>🪞 Ton reflet ${P()===2?"(chacun le sien)":""}</h3><p class="small">Choisis les <b>2 activités</b> que tu préfères. Ton profil sera noté dans le carnet de bord.</p>`;
+    G.pl.forEach((p,pi)=>{
+      h+=`<div class="item">${P()===2?`<span class="who ${pi?"p2":""}">${esc(p)}</span>`:""}<div class="opts">`+
+        RIASEC.map(r=>`<button class="btn txt ${(G.prof[pi]||[]).includes(r)?"sel":""}" data-pp="${pi}" data-pr="${r}">${esc(RIASEC_INFO[r].act)}</button>`).join("")+`</div></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<div class="center" style="margin:16px"><button class="btn green" id="readyBtn">⚔ J'AI LU, À L'ÉPREUVE !</button></div>`;
+  $("#stage").innerHTML=h;
+  $$("[data-pp]").forEach(b=>b.onclick=()=>{
+    const pi=+b.dataset.pp,r=b.dataset.pr,arr=G.prof[pi]=G.prof[pi]||[];
+    if(arr.includes(r)) arr.splice(arr.indexOf(r),1); else { if(arr.length>=2) arr.shift(); arr.push(r); }
+    $$(`[data-pp="${pi}"]`).forEach(x=>x.classList.toggle("sel",arr.includes(x.dataset.pr)));
+  });
+  $("#readyBtn").onclick=()=>{
+    if(R.self && G.prof.some(a=>!a||a.length<2)){ alertBox("Choisis 2 activités dans « Ton reflet » avant de commencer."+(P()===2?" (chacun les siennes)":"")); return; }
+    if(R.type==="boussole") return renderBoussole();
+    if(R.type==="form") return renderForm();
+    buildChallenge(key);
+  };
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function alertBox(t){ const m=$("#stage").querySelector(".msg.alert")||Object.assign(document.createElement("div"),{className:"msg err alert"}); m.textContent=t; $("#stage").appendChild(m); m.scrollIntoView({behavior:"smooth"}); }
+
+/* ---------- épreuves classiques ---------- */
+function buildChallenge(key){
+  const R=ROOMS[key]; let items;
+  if(R.type==="order"){ const [a,b]=R.slices[W.d]; items=R.items.slice(a,b).map((it,i)=>[...it,i]); }
+  else if(R.temple){ items=shuffle(R.pool).slice(0,R.count[W.d]); }
+  else if(R.boss){ items=buildBoss(R.count[W.d]); }
+  else items=shuffle(R.items).slice(0,R.count[W.d]);
+  cur={key,R,items,hintsLeft:W.D.hints,state:{},shownHints:[]};
+  if(R.type==="match") cur.choices=(R.easyChoices&&W.d===0)?R.choices.filter(c=>items.some(it=>it[1]===c)):R.choices;
+  if(R.type==="order"){ let o; do{o=shuffle(items.map((_,i)=>i));}while(o.every((v,i)=>v===i)); cur.state.order=o; }
+  if(R.type==="quiz") cur.state.opts=items.map(it=>shuffle(it[1].map((t,i)=>({t,ok:i===it[2]}))));
+  renderChallenge(); window.scrollTo({top:0,behavior:"smooth"});
+}
+function renderChallenge(marks){
+  const {R,items}=cur, st=cur.state, mk=i=>marks&&marks.includes(i)?"bad":"";
+  let h=`<div class="biome ${R.bio}"><h2>SALLE ${W.level+1} · ${R.name}</h2><div>${esc(R.intro)}</div>
+    ${P()===2?`<div class="small" style="margin-top:8px">🎮 Chacun répond à la question qui porte son prénom… mais vous pouvez vous entraider !</div>`:""}</div><div class="panel">`;
+  if(R.type==="match"){
+    if(W.d===0&&R.choices===RIASEC) h+=`<div class="legend">${RIASEC.map(r=>`<span class="tag">${r} = ${RIASEC_INFO[r].verb}</span>`).join("")}</div>`;
+    items.forEach((it,i)=>{ h+=`<div class="item ${mk(i)}"><div class="q">${who(i)}${i+1}. ${esc(it[0])}</div><select data-i="${i}"><option value="">— choisir —</option>${cur.choices.map(c=>`<option ${st[i]===c?"selected":""}>${esc(c)}</option>`).join("")}</select></div>`; });
+  }
+  if(R.type==="quiz") items.forEach((it,i)=>{ h+=`<div class="item ${mk(i)}"><div class="q">${who(i)}${i+1}. ${esc(it[0])}</div><div class="opts">`+st.opts[i].map((o,j)=>`<button class="btn txt ${st[i]===j?"sel":""}" data-q="${i}" data-o="${j}">${esc(o.t)}</button>`).join("")+`</div></div>`; });
+  if(R.type==="bucket") items.forEach((it,i)=>{ h+=`<div class="item ${mk(i)}"><div class="q">${who(i)}${i+1}. ${esc(it[0])}</div><div class="opts">`+R.buckets.map((b,j)=>`<button class="btn txt ${st[i]===b?"sel":""}" data-b="${i}" data-v="${j}">${esc(b)}</button>`).join("")+`</div></div>`; });
+  if(R.type==="order") st.order.forEach((idx,pos)=>{ const it=items[idx], txt=W.d===2?it[1]:it[0];
+    h+=`<div class="item order-row ${mk(pos)}"><span class="num">${pos+1}.</span><span class="txt">${esc(txt)}</span><button class="btn mini" data-up="${pos}" ${pos===0?"disabled":""}>▲</button><button class="btn mini" data-dn="${pos}" ${pos===items.length-1?"disabled":""}>▼</button></div>`; });
+  if(R.type==="tf") items.forEach((it,i)=>{ h+=`<div class="item ${mk(i)}"><div class="q">${who(i)}${i+1}. ${esc(it[0])}</div><div class="opts"><button class="btn ${st[i]===true?"sel":""}" data-tf="${i}" data-v="1">VRAI</button><button class="btn ${st[i]===false?"sel":""}" data-tf="${i}" data-v="0">FAUX</button></div></div>`; });
+  h+=`<div class="center" style="margin-top:14px"><button class="btn green" id="checkBtn">✔ VALIDER</button><button class="btn" id="reread">📜 PARCHEMIN</button>
+      ${W.D.hints?`<button class="btn gold" id="hintBtn" ${cur.hintsLeft?"":"disabled"}>💡 INDICE (${cur.hintsLeft})</button>`:""}</div>
+      <div class="msg" id="lvlMsg"></div><div>${cur.shownHints.map(t=>`<div class="hint">💡 ${esc(t)}</div>`).join("")}</div>
+      <div id="rereadBox" class="hidden scroll" style="margin-top:12px">${R.info}</div></div>`;
+  $("#stage").innerHTML=h;
+  $$("select[data-i]").forEach(s=>s.onchange=()=>{st[+s.dataset.i]=s.value;});
+  $$("[data-q]").forEach(b=>b.onclick=()=>{st[+b.dataset.q]=+b.dataset.o;renderChallenge();});
+  $$("[data-b]").forEach(b=>b.onclick=()=>{st[+b.dataset.b]=R.buckets[+b.dataset.v];renderChallenge();});
+  $$("[data-tf]").forEach(b=>b.onclick=()=>{st[+b.dataset.tf]=b.dataset.v==="1";renderChallenge();});
+  $$("[data-up]").forEach(b=>b.onclick=()=>{const p=+b.dataset.up,o=st.order;[o[p-1],o[p]]=[o[p],o[p-1]];renderChallenge();});
+  $$("[data-dn]").forEach(b=>b.onclick=()=>{const p=+b.dataset.dn,o=st.order;[o[p+1],o[p]]=[o[p],o[p+1]];renderChallenge();});
+  $("#checkBtn").onclick=check;
+  $("#reread").onclick=()=>$("#rereadBox").classList.toggle("hidden");
+  const hb=$("#hintBtn"); if(hb) hb.onclick=()=>{ if(!cur.hintsLeft)return; cur.shownHints.push(R.hints[W.D.hints-cur.hintsLeft]); cur.hintsLeft--; W.hints++; W.roomHints++; renderChallenge(); };
+}
+function check(){
+  const {R,items,state:st}=cur, wrong=[]; let missing=0;
+  if(R.type==="match"||R.type==="bucket") items.forEach((it,i)=>{ if(!st[i])missing++; else if(st[i]!==it[1])wrong.push(i); });
+  if(R.type==="quiz") items.forEach((it,i)=>{ if(st[i]===undefined)missing++; else if(!st.opts[i][st[i]].ok)wrong.push(i); });
+  if(R.type==="tf") items.forEach((it,i)=>{ if(st[i]===undefined)missing++; else if(st[i]!==it[1])wrong.push(i); });
+  if(R.type==="order") st.order.forEach((idx,pos)=>{ if(idx!==pos)wrong.push(pos); });
+  if(missing){ const m=$("#lvlMsg"); m.className="msg err"; m.textContent=`Il reste ${missing} réponse(s) à compléter avant de valider.`; return; }
+  if(!wrong.length){ roomWon(); return; }
+  W.err+=wrong.length; W.roomErr+=wrong.length; W.hearts--; hud();
+  if(W.hearts<=0){ respawn(); return; }
+  renderChallenge(W.D.show?wrong:null);
+  const m=$("#lvlMsg"); m.className="msg err";
+  m.textContent=W.D.show?`💥 ${wrong.length} erreur(s) (en rouge). Vous perdez un cœur !`:`💥 ${wrong.length} erreur(s)… à vous de trouver lesquelles ! Vous perdez un cœur.`;
+}
+function respawn(){
+  W.deaths++; W.hearts=W.D.hearts; hud();
+  $("#stage").innerHTML=`<div class="panel dark center"><h2 style="font-size:15px;color:#ff6b6b">PLUS DE CŒURS !</h2>
+   <p>Vous réapparaissez à l'entrée de la salle ${W.level+1}, avec de nouvelles questions. Relisez bien le parchemin !</p><button class="btn green" id="resp">↻ RÉAPPARAÎTRE</button></div>`;
+  $("#resp").onclick=()=>buildChallenge(W.w.rooms[W.level]);
+}
+
+/* ---------- salle Boussole ---------- */
+function renderBoussole(){
+  const ans=G.pl.map(()=>({})); let pi=0;
+  const draw=()=>{
+    let h=`<div class="biome bio-g"><h2>SALLE ${W.level+1} · LA BOUSSOLE</h2><div>${P()===2?`C'est au tour de <b>${esc(G.pl[pi])}</b> de répondre (${pi+1}/2).`:"Réponds aux 14 questions."}</div></div><div class="panel">`;
+    BQ.forEach(([q,opts],i)=>{ h+=`<div class="item"><div class="q">${i+1}. ${esc(q)}</div><div class="opts">`+opts.map((o,j)=>`<button class="btn txt ${ans[pi][i]===j?"sel":""}" data-bq="${i}" data-bo="${j}">${esc(o[0])}</button>`).join("")+`</div></div>`; });
+    h+=`<div class="msg err" id="mB"></div><div class="center"><button class="btn green" id="goB">${pi<P()-1?"JOUEUR SUIVANT ▶":"VOIR LE RÉSULTAT ▶"}</button></div></div>`;
+    $("#stage").innerHTML=h;
+    $$("[data-bq]").forEach(b=>b.onclick=()=>{ ans[pi][+b.dataset.bq]=+b.dataset.bo; $$(`[data-bq="${b.dataset.bq}"]`).forEach(x=>x.classList.toggle("sel",x===b)); });
+    $("#goB").onclick=()=>{
+      const left=BQ.length-Object.keys(ans[pi]).length;
+      if(left){ $("#mB").textContent=`Il reste ${left} question(s).`; return; }
+      if(pi<P()-1){ pi++; draw(); window.scrollTo({top:0}); return; }
+      G.bous=ans.map(a=>{
+        const s={etudes:0,vie:0,alt:0}, flags=[];
+        BQ.forEach(([,opts],i)=>{ const o=opts[a[i]]; for(const k in o[1]) s[k]+=o[1][k]; if(o[2]&&!flags.includes(o[2])) flags.push(o[2]); });
+        const pct={}; for(const k in s) pct[k]=Math.round(100*s[k]/BMAX[k]);
+        const best=Object.entries(pct).sort((x,y)=>y[1]-x[1])[0][0];
+        return {pct,best,flags};
+      });
+      showBoussoleResult();
+    };
+  };
+  draw(); window.scrollTo({top:0});
+}
+function bars(pct){ if(!pct) return `<p class="small">(détail non disponible : partie reprise avec un code court)</p>`; return ["etudes","vie","alt"].map(k=>`<div class="bar"><span>${PATH_LBL[k]}</span><div class="track"><div class="fill" style="width:${pct[k]}%"></div></div><b>${pct[k]} %</b></div>`).join(""); }
+function showBoussoleResult(){
+  const bests=G.bous.map(b=>b.best);
+  const sugg = bests.every(b=>b===bests[0]) ? bests[0] : "decouverte";
+  let h=`<div class="biome bio-g center"><h2>🧭 RÉSULTAT DE LA BOUSSOLE</h2></div><div class="panel">`;
+  G.bous.forEach((b,i)=>{ h+=`<div class="res"><h3>${esc(G.pl[i])}</h3>${bars(b.pct)}
+      <p>Piste la plus forte : <b>${PATH_LBL[b.best]}</b>.</p>
+      ${b.flags.length?`<p><b>🔎 À creuser avec ton prof ou le/la Psy-EN :</b></p><ul>${b.flags.map(f=>`<li>${esc(FLAGS[f])}</li>`).join("")}</ul>`:""}</div>`; });
+  h+=`<p>Votre choix au départ : <b>${G.wish==="indecis"?"je ne sais pas encore":PATH_LBL[G.wish]}</b>. Ce n'est qu'une piste : vous pouvez garder votre choix ou suivre la Boussole. Ce choix personnalise votre carnet et votre projet final ; tous les mondes restent à jouer.</p>
+    <div class="center">${G.wish!=="indecis"&&G.wish!==sugg?`<button class="btn" data-pathc="${G.wish}">GARDER : ${PATH_LBL[G.wish]}</button>`:""}
+    <button class="btn gold" data-pathc="${sugg}">${sugg==="decouverte"?"DÉCOUVRIR TOUS LES CHEMINS":"SUIVRE LA BOUSSOLE : "+PATH_LBL[sugg]}</button>
+    ${sugg!=="decouverte"?`<button class="btn" data-pathc="decouverte">TOUT DÉCOUVRIR</button>`:""}</div></div>`;
+  $("#stage").innerHTML=h;
+  $$("[data-pathc]").forEach(b=>b.onclick=()=>{ G.path=b.dataset.pathc; roomWon(); });
+  window.scrollTo({top:0});
+}
+
+/* ---------- salle Projet (formulaire) ---------- */
+const PATH_OPTS=["Poursuite d'études en lycée (BTS…)","Alternance / apprentissage","Entrer dans la vie active","Formation courte d'1 an (CS, FCIL)","Autre (service civique, armée, création…)"];
+function renderForm(){
+  const F=["planA_type","planA","planB","act1","act2","act3","allie"];
+  let h=`<div class="biome bio-f"><h2>SALLE ${W.level+1} · LE PORTAIL DU PROJET</h2><div>${esc(ROOMS.projet.intro)}</div></div><div class="panel">`;
+  G.pl.forEach((p,pi)=>{
+    const pr=G.projet[pi]=G.projet[pi]||{}, b=G.bous[pi];
+    h+=`<div class="res"><h3>${P()===2?"🎮 "+esc(p):"Mon projet"}</h3>
+      ${b?`<p class="small">Rappel Boussole : ${PATH_LBL[b.best]}${(G.prof[pi]||[]).length?` · Profil : ${G.prof[pi].join(" + ")}`:""}</p>`:""}
+      <label><b>Mon plan A</b> – type de chemin :</label><br><select data-f="${pi}:planA_type"><option value="">— choisir —</option>${PATH_OPTS.map(o=>`<option ${pr.planA_type===o?"selected":""}>${o}</option>`).join("")}</select><br>
+      <label>Précisément (formation ou métier visé, où ?) :</label><textarea data-f="${pi}:planA" placeholder="ex : BTS MCO au lycée Jean Moulin">${esc(pr.planA)}</textarea>
+      <label><b>Mon plan B</b> :</label><textarea data-f="${pi}:planB" placeholder="ex : BTS MCO en apprentissage, ou vendeur·se puis BTS plus tard">${esc(pr.planB)}</textarea>
+      <label><b>3 actions concrètes, avec une date</b> :</label>
+      <input type="text" data-f="${pi}:act1" value="${esc(pr.act1)}" placeholder="1. ex : en février, aller aux portes ouvertes de…" style="max-width:100%">
+      <input type="text" data-f="${pi}:act2" value="${esc(pr.act2)}" placeholder="2." style="max-width:100%;margin-top:6px">
+      <input type="text" data-f="${pi}:act3" value="${esc(pr.act3)}" placeholder="3." style="max-width:100%;margin-top:6px">
+      <label><b>Ma personne ressource</b> (qui peut m'aider ?) :</label><input type="text" data-f="${pi}:allie" value="${esc(pr.allie)}" style="max-width:100%"></div>`;
+  });
+  h+=`<div class="msg err" id="mF"></div><div class="center"><button class="btn green" id="goF">🌀 FRANCHIR LE PORTAIL</button></div></div>`;
+  $("#stage").innerHTML=h;
+  $$("[data-f]").forEach(el=>el.oninput=el.onchange=()=>{ const [pi,k]=el.dataset.f.split(":"); G.projet[+pi][k]=el.value; });
+  $("#goF").onclick=()=>{
+    const miss=[]; G.pl.forEach((p,pi)=>F.forEach(k=>{ const v=(G.projet[pi][k]||"").trim(); if(v.length<(k==="planA_type"?1:4)) miss.push(p); }));
+    if(miss.length){ $("#mF").textContent="Complétez tous les champs (quelques mots au moins) avant de franchir le Portail."; return; }
+    roomWon();
+  };
+  window.scrollTo({top:0});
+}
+
+/* ---------- salle réussie ---------- */
+function roomWon(){
+  const key=W.w.rooms[W.level], R=ROOMS[key];
+  W.stats[W.level]={k:key,t:Math.round((Date.now()-W.roomStart)/1000),e:W.roomErr,h:W.roomHints};
+  const letter=W.w.word[W.level]; W.level++; hud(); saveProgress();
+  const reveal = key==="mine"&&cur&&cur.key==="mine" ? `<div class="panel"><h3>🔎 Les formations derrière ces métiers</h3><table>${cur.items.map(it=>`<tr><td>${esc(it[1][it[2]])}</td><td>${esc(it[3])}</td></tr>`).join("")}</table></div>` : "";
+  const nk=key;
+  $("#stage").innerHTML=`<div class="biome ${R.bio} center"><h2>SALLE RÉUSSIE !</h2><div>Vous trouvez une lettre gravée dans un bloc :</div><div class="big-letter">${letter}</div></div>${reveal}
+   <div class="defi"><b>${P()===2?"🤝 DÉFI BINÔME":"✍️ DÉFI PERSO"}</b><br>${esc(P()===2?R.duo:R.solo)}
+     <textarea id="note" placeholder="Écrivez votre réponse ici (au moins une phrase) : elle sera dans votre carnet de bord.">${esc(G.notes[nk]||"")}</textarea><div class="msg err" id="mN"></div></div>
+   <div class="mission"><b>📱 MISSION HELLO CHARLY</b><br>${esc(R.mission)}</div>
+   <div class="center" style="margin-top:14px"><button class="btn green" id="nextBtn">${W.level<W.w.rooms.length?"SALLE SUIVANTE ▶":"VERS LE COFFRE ▶"}</button></div>`;
+  $("#nextBtn").onclick=()=>{
+    const v=$("#note").value.trim();
+    if(v.length<15){ $("#mN").textContent="Écrivez au moins une vraie phrase pour le défi : votre professeur·e la lira."; return; }
+    G.notes[nk]=v; persist(); startRoom();
+  };
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ---------- coffre du monde ---------- */
+function finalChest(){
+  hud();
+  $("#stage").innerHTML=`<div class="biome ${W.w.bio} center"><h2>LE COFFRE DU MONDE ${W.n}</h2><div class="chest"></div>
+    <div>Vos lettres : <span class="px" style="color:var(--gold);font-size:18px">${shuffle([...W.w.word]).join("  ")}</span></div><p>Remettez-les dans l'ordre pour ouvrir le coffre.</p></div>
+    <div class="panel center"><input type="text" id="code" placeholder="mot de passe" maxlength="12" style="text-transform:uppercase"><br>
+    <button class="btn gold" id="openBtn">🔑 OUVRIR</button><div class="msg" id="fMsg"></div></div>`;
+  const go=()=>{ if($("#code").value.trim().toUpperCase()===W.w.word) worldWon(); else { W.err++; $("#fMsg").className="msg err"; $("#fMsg").textContent="Le coffre reste fermé…"; } };
+  $("#openBtn").onclick=go; $("#code").onkeydown=e=>{if(e.key==="Enter")go();};
+}
+function worldWon(){
+  W.ended=true; clearInterval(timerId);
+  const sec=elapsed(), wi=wInfo(W.n);
+  const score=Math.max(50,600+[0,150,300][W.d]-W.err*15-W.hints*20-W.deaths*80+(W.D.time?Math.floor((W.D.time-sec)/10):0));
+  const better=!wi.done||score>wi.score;
+  if(better){ Object.assign(wi,{done:true,lv:W.w.rooms.length,stats:W.stats,err:W.err,hints:W.hints,deaths:W.deaths,t:sec,score,d:W.d,date:new Date().toISOString()}); }
+  const nxt=WORLDS[W.n]; persist();
+  const last=W.n===5;
+  $("#stage").innerHTML=`<div class="biome ${W.w.bio} center"><h2>🏆 MONDE ${W.n} TERMINÉ !</h2><div class="big-letter">${W.w.word}</div>
+    <p>${score} XP${!better?` (votre meilleur score reste ${wi.score} XP)`:""} · ${fmtT(sec)} · ${W.err} erreur(s)</p>
+    <p>Nouveau rang : <b>${RANKS[nDone(G)]}</b></p></div>
+    <div class="panel">
+     <h3>📤 Rendre votre travail</h3>
+     <p>Copiez votre <b>code de sauvegarde</b> et envoyez-le à votre professeur·e (ENT, messagerie). <b>Gardez-le aussi</b> : il vous permettra de reprendre la partie à la prochaine séance, sur n'importe quel ordinateur.</p>
+     <div id="endSave"></div>
+     ${nxt?`<p>🔑 La prochaine séance : <b>Monde ${nxt.n} · ${nxt.name}</b>. Votre professeur·e vous donnera la clé.</p>`:""}
+     <div class="center">${last?`<button class="btn gold" id="certBtn">🎖️ VOIR MON CERTIFICAT</button>`:""}<button class="btn green" id="toMap">🗺️ CARTE DES MONDES</button><button class="btn" id="toCarnet">📘 MON CARNET</button></div></div>`;
+  openSave("#endSave",true);
+  $("#toMap").onclick=openMap; $("#toCarnet").onclick=openCarnet;
+  if(last) $("#certBtn").onclick=()=>openCarnet(true);
+}
+function timeOut(){
+  $("#stage").innerHTML=`<div class="panel dark center"><h2 style="font-size:15px;color:#ff6b6b">⏳ TEMPS ÉCOULÉ !</h2>
+   <p>Votre progression est sauvegardée : vous reprendrez à la salle ${W.level+1} (le chronomètre repart à zéro pour ce monde).</p>
+   <div id="toSave" style="color:#222"></div><button class="btn green" id="toMap2">🗺️ CARTE DES MONDES</button></div>`;
+  const wi=wInfo(W.n); wi.t=0; persist();
+  openSave("#toSave",true); $("#toMap2").onclick=openMap;
+}
+
+/* ---------- code de sauvegarde ---------- */
+function openSave(sel,inline){
+  persist();
+  const shortC=makeShort(G), full=makeCode(G); persist();
+  $(sel).innerHTML=`<div class="res"><p class="small"><b>Code de sauvegarde de ${esc(G.pl.join(" & "))}</b> – ${nDone(G)}/5 mondes</p>
+    <div class="shortcode">${shortC}</div>
+    <div class="center"><button class="btn gold mini" data-copy>📋 COPIER LE CODE</button>${inline?"":`<button class="btn mini" data-close>FERMER</button>`}</div><div class="msg ok small" data-cm></div>
+    <p class="small">Envoie ce code à ton professeur·e et note-le (cahier, téléphone) : il te permet de reprendre ta partie sur n'importe quel ordinateur. Sur cet ordinateur, ta partie est aussi gardée automatiquement.</p>
+    <details><summary class="small">Code complet, avec mes réponses écrites (seulement si mon professeur·e le demande)</summary>
+      <textarea readonly class="codebox">${full}</textarea><div class="center"><button class="btn mini" data-copyfull>📋 COPIER LE CODE COMPLET</button></div><div class="msg ok small" data-cm2></div></details></div>`;
+  const box=$(sel), ta=document.createElement("textarea");
+  box.querySelector("[data-copy]").onclick=()=>{ ta.value=shortC; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); copyText(shortC,box.querySelector("[data-cm]"),ta,"Code copié !"); setTimeout(()=>ta.remove(),1000); };
+  box.querySelector("[data-copyfull]").onclick=()=>copyText(full,box.querySelector("[data-cm2]"),box.querySelector("textarea"));
+  const c=box.querySelector("[data-close]"); if(c) c.onclick=()=>box.innerHTML="";
+}
+function copyText(text,msgEl,ta,okMsg){
+  const ok=()=>msgEl.textContent=okMsg||"Copié ! Collez-le dans un message à votre professeur·e et gardez-en une copie.";
+  const fb=()=>{ try{ ta.select(); document.execCommand("copy"); ok(); }catch(e){ msgEl.textContent="Sélectionnez le code et copiez-le à la main (Ctrl+C)."; } };
+  try{ navigator.clipboard.writeText(text).then(ok).catch(fb); }catch(e){ fb(); }
+}
+
+/* =========================================================
+   CARNET DE BORD (élève) – aussi utilisé par le tableau de bord
+   ========================================================= */
+function carnetHTML(g,cert){
+  const done=nDone(g);
+  let h="";
+  if(cert&&done===5){
+    h+=`<div class="cert"><div class="px" style="font-size:11px">CERTIFICAT</div><h2>EXPLORATEUR·RICE DE L'ORIENTATION</h2>
+      <p>décerné à <b>${esc(g.pl.join(" & "))}</b>${g.cls?` (${esc(g.cls)})`:""}</p>
+      <p>pour avoir traversé les 5 mondes d'Orientation Craft :<br>se connaître · explorer les métiers · les études après le bac pro · l'emploi et l'alternance · construire son projet</p>
+      <p class="px" style="font-size:12px">RANG ${RANKS[5].toUpperCase()} · ${totalXP(g)} XP</p><p class="small">${new Date().toLocaleDateString("fr-FR")}</p><p class="small">Certificat délivré par Marie Frison, Professeure d'enseignement professionnel<br>Lycée Jean Hanzelet</p></div>`;
+  }
+  h+=`<table><tr><th>Élève(s)</th><td>${esc(g.pl.join(" & "))} ${g.cls?`(${esc(g.cls)})`:""} · ${g.mode===2?"binôme":"solo"}</td></tr>
+    <tr><th>Chemin choisi</th><td>${PATH_LBL[g.path]||"—"} ${g.wish?`<span class="small">(choix de départ : ${g.wish==="indecis"?"je ne sais pas":PATH_LBL[g.wish]})</span>`:""}</td></tr>
+    <tr><th>Progression</th><td>Rang ${RANKS[done]} · ${done}/5 mondes · ${totalXP(g)} XP</td></tr></table>
+    <table><tr><th>Monde</th><th>État</th><th>Score</th><th>Temps</th><th>Erreurs</th><th>Indices</th></tr>${WORLDS.map(w=>{const wi=g.worlds[w.n];
+      return `<tr><td>${w.n}. ${w.sub}</td><td>${wi?(wi.done?"✅ terminé":`⏸ salle ${wi.lv+1}/${w.rooms.length}`):"—"}</td><td>${wi&&wi.done?wi.score:"—"}</td><td>${wi?fmtT(wi.t||0):"—"}</td><td>${wi?wi.err:"—"}</td><td>${wi?wi.hints:"—"}</td></tr>`;}).join("")}</table>`;
+  if(g.bous&&g.bous.length){ h+=`<h3>🧭 Boussole</h3>`; g.bous.forEach((b,i)=>{ h+=`<div class="res"><b>${esc(g.pl[i])}</b>${bars(b.pct)}${b.flags.length?`<p class="small"><b>À creuser :</b> ${b.flags.map(f=>esc(FLAGS[f])).join(" · ")}</p>`:""}</div>`; }); }
+  if(g.prof&&g.prof.some(p=>p&&p.length)){ h+=`<h3>🪞 Profil d'intérêts</h3><ul>${g.pl.map((p,i)=>{const pr=g.prof[i]||[];return `<li><b>${esc(p)}</b> : ${pr.length?pr.join(" + ")+`<br><span class="small">Métiers à explorer : ${pr.map(r=>RIASEC_INFO[r].metiers).join(" ; ")}</span>`:"—"}</li>`;}).join("")}</ul>`; }
+  const notes=WORLDS.flatMap(w=>w.rooms.filter(r=>g.notes&&g.notes[r]).map(r=>`<li><b>M${w.n} · ${ROOMS[r].theme}</b> – ${esc(g.notes[r])}</li>`));
+  if(notes.length) h+=`<h3>✍️ Réponses aux défis</h3><ul>${notes.join("")}</ul>`;
+  if(g.projet&&g.projet.some(p=>p&&p.planA)){ h+=`<h3>🎯 Projet</h3>`; g.projet.forEach((p,i)=>{ if(!p||!p.planA)return; h+=`<div class="res"><b>${esc(g.pl[i])}</b><br>Plan A : <b>${esc(p.planA_type)}</b> – ${esc(p.planA)}<br>Plan B : ${esc(p.planB)}<br>Actions : ${[p.act1,p.act2,p.act3].map(esc).join(" / ")}<br>Personne ressource : ${esc(p.allie)}</div>`; }); }
+  return h;
+}
+const NEXT_STEPS = {
+  etudes:["Viser de bons résultats et une bonne assiduité : le conseil de classe donne son avis.","Aller aux portes ouvertes de 2 ou 3 BTS.","Soigner ses PFMP : les appréciations comptent.","Préparer ses projets de formation motivés pour Parcoursup.","Prévoir un plan B : BTS en apprentissage, certificat de spécialisation…"],
+  vie:["Garder le contact avec ses tuteurs de PFMP.","Préparer CV et lettre dès la Terminale.","S'entraîner à l'entretien d'embauche.","Repérer France Travail, la Mission locale, les agences d'intérim.","Penser au permis de conduire."],
+  alt:["Choisir 2 ou 3 formations en apprentissage et leurs CFA.","Chercher une entreprise dès le printemps de Terminale.","Préparer CV, lettre et entretien.","Utiliser La bonne alternance, Parcoursup et le réseau des PFMP.","Avoir un plan B (BTS en lycée, CS…)."],
+  decouverte:["Explorer 2 chemins découverts (Onisep, Hello Charly).","Prendre rendez-vous avec le/la Psy-EN.","Interroger un professionnel ou un ancien élève.","Aller à un salon ou à une porte ouverte.","Refaire la Boussole dans quelques mois."]
+};
+const LINKS=[["Onisep – métiers et formations","https://www.onisep.fr"],["Parcoursup","https://www.parcoursup.gouv.fr"],["La bonne alternance","https://labonnealternance.apprentissage.beta.gouv.fr"],["France Travail","https://www.francetravail.fr"],["Missions locales","https://www.unml.info"],["Service civique","https://www.service-civique.gouv.fr"],["Hello Charly","https://hello-charly.com"]];
+function openCarnet(cert){
+  $("#carnetBody").innerHTML=carnetHTML(G,cert)+
+    `<h3>🗺️ Prochaines étapes conseillées</h3><ul>${(NEXT_STEPS[G.path]||NEXT_STEPS.decouverte).map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+     <h3>🔗 Sites utiles</h3><ul>${LINKS.map(([t,u])=>`<li><a href="${u}" target="_blank" rel="noopener">${t}</a></li>`).join("")}</ul>
+     <h3>💾 Mon code de sauvegarde</h3><div id="carnetSave"></div>`;
+  openSave("#carnetSave",true);
+  show("carnet");
+}
+$("#carnetBack").onclick=openMap;
+
+renderHome();
+
+
+/* =========================================================
+   ESPACE ENSEIGNANT : tableau de bord + guide + réponses
+   ========================================================= */
+const DASH={recs:{},mode:"local",db:null,filter:"",search:""};
+$("#profBtn").onclick=()=>show("prof");
+$("#profBack").onclick=()=>{ renderHome(); show("home"); };
+const PROF_HASH="ed06165df144bc33ae6915d7972c70aed1ea175a773a17a30361ccc12b7f20cd";
+async function sha256(t){ const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+$("#profCode").onkeydown=e=>{ if(e.key==="Enter") $("#profOk").click(); };
+$("#profOk").onclick=async()=>{
+  const v=$("#profCode").value.toUpperCase().replace(/[\s-]/g,"").replace(/O/g,"0").replace(/[IL]/g,"1");
+  let ok=false; try{ ok=(await sha256(v+"|oc-prof"))===PROF_HASH; }catch(e){ $("#profMsg").textContent="Ouvrez la page dans un navigateur récent."; return; }
+  if(!ok){ $("#profMsg").textContent="Code incorrect."; return; }
+  $("#profLock").classList.add("hidden"); $("#profArea").classList.remove("hidden");
+  renderGuide(); renderAnswers(); initStore();
+};
+$$("[data-tab]").forEach(b=>b.onclick=()=>{ $$("[data-tab]").forEach(x=>x.classList.toggle("sel",x===b)); ["tDash","tGuide","tAns"].forEach(t=>$("#"+t).classList.toggle("hidden",t!==b.dataset.tab)); });
+
+/* ---------- stockage : base de l'artefact (réservée à l'enseignant) ou, à défaut, ce navigateur ---------- */
+async function initStore(){
+  $("#storeMsg").textContent="Connexion au stockage…";
+  let db=null;
+  try{ if(window.claude&&claude.use) db=await Promise.race([claude.use("db"),new Promise(r=>setTimeout(()=>r(null),10000))]); }catch(e){ db=null; }
+  if(db){
+    try{
+      const snap=await db.collection("results").get();
+      DASH.db=db; DASH.mode="db"; DASH.recs={};
+      snap.docs.forEach(d=>{ const x=d.data(); if(x&&x.g) DASH.recs[d.id]=x.g; });
+      $("#storeMsg").innerHTML="🟢 Résultats enregistrés dans l'artefact : vous les retrouvez sur n'importe quel appareil où vous êtes connecté·e à Claude. Seul·e le/la propriétaire (et les éditeurs) peut les lire.";
+    }catch(e){ db=null; }
+  }
+  if(!db){
+    DASH.mode="local";
+    try{ DASH.recs=JSON.parse(localStorage.getItem("oc2_dash")||"{}"); }catch(e){ DASH.recs={}; }
+    $("#storeMsg").innerHTML="🟠 Résultats enregistrés dans <b>ce navigateur uniquement</b> (connectez-vous à Claude pour les retrouver partout).";
+  }
+  renderDash();
+}
+async function putRec(key,g){
+  DASH.recs[key]=g;
+  if(DASH.mode==="db"){ try{ await DASH.db.collection("results").doc(key).set({g,cls:g.cls||"",updated:g.updated||""}); return true; }catch(e){ fallbackLocal(e); } }
+  saveLocal(); return true;
+}
+async function delRec(id){
+  delete DASH.recs[id];
+  if(DASH.mode==="db"){ try{ await DASH.db.collection("results").doc(id).delete(); return; }catch(e){ fallbackLocal(e); } }
+  saveLocal();
+}
+function saveLocal(){ try{ localStorage.setItem("oc2_dash",JSON.stringify(DASH.recs)); }catch(e){} }
+function fallbackLocal(e){
+  DASH.mode="local"; saveLocal();
+  $("#storeMsg").innerHTML="🟠 L'enregistrement dans l'artefact a été refusé"+(e&&e.code==="quota_exceeded"?" (stockage plein)":"")+" : les résultats sont gardés dans ce navigateur.";
+}
+
+/* ---------- import des codes ---------- */
+$("#importBtn").onclick=async()=>{
+  let txt=$("#importArea").value;
+  const full=txt.match(/OC2-[A-Za-z0-9+/=]+-[0-9a-f]{8}/g)||[]; full.forEach(c=>txt=txt.replace(c," "));
+  const short=txt.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().match(/[A-Z\-]+(?:\+[A-Z\-]+)?\.[A-Z0-9]*\.[0-9A-Z]{4}(?:-[0-9A-Z]{1,4})*/g)||[];
+  const codes=[...full,...short];
+  if(!codes.length){ $("#importMsg").textContent="Aucun code trouvé. Un code ressemble à : INES.1MCVA.K7Q2-9MXD"; return; }
+  let add=0,upd=0,old=0,bad=0;
+  for(const c of codes){
+    const r=readAny(c); if(r.err){ bad++; continue; }
+    const g=r.g, key=dashKey(g), ex=DASH.recs[key];
+    g.updated=g.updated||new Date().toISOString();
+    if(ex && progressOf(g)<progressOf(ex)){ old++; continue; }
+    let rec=g;
+    if(ex && g.short){ rec={...ex,worlds:{...ex.worlds},path:g.path,updated:g.updated};
+      for(const n in g.worlds){ const a=ex.worlds[n]||{}; rec.worlds[n]={...a,...g.worlds[n],stats:a.stats||[]}; } }
+    if(ex && !g.short && !ex.short && progressOf(g)===progressOf(ex) && (ex.updated||"")>(g.updated||"")){ old++; continue; }
+    await putRec(key,rec); ex?upd++:add++;
+  }
+  $("#importMsg").textContent=`${add} élève(s) ajouté(s), ${upd} mis à jour`+(old?`, ${old} code(s) plus ancien(s) ignoré(s)`:"")+(bad?`, ⚠️ ${bad} code(s) mal recopié(s) ou modifié(s)`:"")+".";
+  $("#importArea").value=""; renderDash();
+};
+
+/* ---------- alertes « travaille-t-il vraiment ? » ---------- */
+function alerts(g){
+  const a=[];
+  Object.entries(g.worlds||{}).forEach(([n,w])=>{
+    (w.stats||[]).forEach(s=>{ if(s&&s.t<60&&!["projet","boussole"].includes(s.k)) a.push(`⚡ M${n} : salle « ${ROOMS[s.k]?ROOMS[s.k].theme:s.k} » faite en ${s.t} s`); });
+    if(!(w.stats||[]).length&&w.rush) a.push(`⚡ M${n} : ${w.rush>=3?"3 salles ou plus":w.rush+" salle(s)"} faite(s) en moins d'1 min`);
+    if(w.shortN) a.push(`📝 M${n} : ${w.shortN>=3?"3 défis ou plus":w.shortN+" défi(s)"} avec une réponse très courte`);
+    if((w.err||0)>=20) a.push(`🎲 M${n} : ${w.err} erreurs (réponses au hasard ?)`);
+    if((w.deaths||0)>=2) a.push(`💀 M${n} : ${w.deaths} réapparitions`);
+  });
+  return a;
+}
+function lastWorld(g){ for(let n=5;n>=1;n--){ const w=g.worlds&&g.worlds[n]; if(w&&(w.done||w.lv)) return n; } return 0; }
+
+/* ---------- tableau ---------- */
+function renderDash(){
+  const recs=Object.values(DASH.recs);
+  const classes=[...new Set(recs.map(g=>g.cls||"(sans classe)"))].sort();
+  if(DASH.filter&&!classes.includes(DASH.filter)) DASH.filter="";
+  $("#clsFilter").innerHTML=`<option value="">Toutes les classes (${recs.length})</option>`+classes.map(c=>`<option ${DASH.filter===c?"selected":""}>${esc(c)}</option>`).join("");
+  let list=recs.filter(g=>!DASH.filter||(g.cls||"(sans classe)")===DASH.filter)
+    .filter(g=>!DASH.search||g.pl.join(" ").toLowerCase().includes(DASH.search.toLowerCase()))
+    .sort((a,b)=>(a.cls||"").localeCompare(b.cls||"")||a.pl[0].localeCompare(b.pl[0]));
+  if(!list.length){ $("#dashTable").innerHTML=`<p>Aucun élève pour l'instant. Demandez aux élèves de vous envoyer leur <b>code de sauvegarde</b> à la fin de chaque séance, puis collez les codes ci-dessus.</p>`; $("#dashStats").innerHTML=""; return; }
+  // statistiques de la sélection
+  const perW=WORLDS.map(w=>list.filter(g=>g.worlds&&g.worlds[w.n]&&g.worlds[w.n].done).length);
+  $("#dashStats").innerHTML=`<div class="statrow">${WORLDS.map((w,i)=>`<div class="stat"><div class="px" style="font-size:9px">MONDE ${w.n}</div><b>${perW[i]}/${list.length}</b><div class="small">ont terminé</div></div>`).join("")}
+    <div class="stat"><div class="px" style="font-size:9px">ALERTES</div><b>${list.filter(g=>alerts(g).length).length}</b><div class="small">élève(s) à vérifier</div></div></div>`;
+  let h=`<div class="tablewrap"><table class="dash"><tr><th>Élève(s)</th><th>Classe</th><th>Chemin</th>${WORLDS.map(w=>`<th>M${w.n}</th>`).join("")}<th>XP</th><th>Dernière activité</th><th>Alertes</th><th></th></tr>`;
+  list.forEach(g=>{
+    const al=alerts(g);
+    h+=`<tr><td><b>${esc(g.pl.join(" & "))}</b>${g.mode===2?" <span class='small'>(binôme)</span>":""}</td><td>${esc(g.cls||"—")}</td><td class="small">${PATH_LBL[g.path]||"—"}</td>`+
+      WORLDS.map(w=>{const wi=g.worlds&&g.worlds[w.n]; return `<td class="center">${wi?(wi.done?`✅<br><span class="small">${wi.score}</span>`:`⏸<br><span class="small">${wi.lv}/${w.rooms.length}</span>`):"·"}</td>`;}).join("")+
+      `<td><b>${totalXP(g)}</b></td><td class="small">${g.updated?new Date(g.updated).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"}):"—"}</td>
+      <td class="small">${al.length?`<span class="warn">⚠️ ${al.length}</span>`:"✔"}</td>
+      <td><button class="btn mini" data-det="${dashKey(g)}">VOIR</button><button class="btn mini" data-del="${dashKey(g)}">🗑</button></td></tr>`;
+  });
+  h+=`</table></div><div id="dashDetail"></div>`;
+  $("#dashTable").innerHTML=h;
+  $$("[data-det]").forEach(b=>b.onclick=()=>{
+    const g=DASH.recs[b.dataset.det], al=alerts(g), box=$("#dashDetail");
+    box.innerHTML=`<div class="res detail"><div class="order-row"><h3 class="txt">📘 ${esc(g.pl.join(" & "))} ${g.cls?"("+esc(g.cls)+")":""}</h3><button class="btn mini" id="detClose">✖ FERMER</button></div>
+      ${al.length?`<div class="hint"><b>À vérifier :</b><br>${al.map(esc).join("<br>")}</div>`:""}${carnetHTML(g)}${statsHTML(g)}</div>`;
+    $("#detClose").onclick=()=>box.innerHTML="";
+    box.scrollIntoView({behavior:"smooth"});
+  });
+  $$("[data-del]").forEach(b=>b.onclick=async()=>{
+    if(!b.dataset.armed){ b.dataset.armed=1; b.textContent="SÛR ?"; b.classList.add("danger"); setTimeout(()=>{ if(b.isConnected){ delete b.dataset.armed; b.textContent="🗑"; b.classList.remove("danger"); } },4000); return; }
+    await delRec(b.dataset.del); renderDash();
+  });
+}
+function statsHTML(g){
+  if(Object.values(g.worlds||{}).every(w=>!(w.stats||[]).length)) return `<p class="small">Détail par salle et réponses écrites : disponibles uniquement avec le <b>code complet</b> de l'élève (ou sur son carnet de bord).</p>`;
+  let h=`<h3>⏱ Détail par salle</h3><table><tr><th>Monde</th><th>Salle</th><th>Temps</th><th>Erreurs</th><th>Indices</th></tr>`;
+  WORLDS.forEach(w=>{ const wi=g.worlds&&g.worlds[w.n]; if(!wi) return; (wi.stats||[]).forEach(s=>{ if(!s) return; h+=`<tr><td>M${w.n}</td><td>${esc(ROOMS[s.k]?ROOMS[s.k].theme:s.k)}</td><td>${fmtT(s.t)}${s.t<60&&!["projet","boussole"].includes(s.k)?" ⚡":""}</td><td>${s.e}</td><td>${s.h}</td></tr>`; }); });
+  return h+`</table>`;
+}
+$("#clsFilter").onchange=e=>{ DASH.filter=e.target.value; renderDash(); };
+$("#searchIn").oninput=e=>{ DASH.search=e.target.value; renderDash(); };
+$("#delClass").onclick=async e=>{
+  const b=e.target, target=Object.values(DASH.recs).filter(g=>!DASH.filter||(g.cls||"(sans classe)")===DASH.filter);
+  if(!target.length) return;
+  if(!b.dataset.armed){ b.dataset.armed=1; b.textContent=`⚠️ CONFIRMER : SUPPRIMER ${target.length} ÉLÈVE(S) ${DASH.filter?"DE "+DASH.filter:"(TOUTES CLASSES)"}`; setTimeout(()=>{ delete b.dataset.armed; b.textContent="🗑 SUPPRIMER LA SÉLECTION"; },5000); return; }
+  for(const g of target) await delRec(dashKey(g));
+  delete b.dataset.armed; b.textContent="🗑 SUPPRIMER LA SÉLECTION"; renderDash();
+};
+$("#copyTable").onclick=()=>{
+  const rows=[["Élève(s)","Classe","Mode","Chemin",...WORLDS.map(w=>"Monde "+w.n),"XP","Dernière activité","Alertes"]];
+  Object.values(DASH.recs).filter(g=>!DASH.filter||(g.cls||"(sans classe)")===DASH.filter).forEach(g=>rows.push([g.pl.join(" & "),g.cls||"",g.mode===2?"binôme":"solo",(PATH_LBL[g.path]||"").replace(/^\S+ /,""),
+    ...WORLDS.map(w=>{const wi=g.worlds&&g.worlds[w.n];return wi?(wi.done?"terminé ("+wi.score+" XP)":"en cours ("+wi.lv+"/"+w.rooms.length+")"):"";}),totalXP(g),g.updated?new Date(g.updated).toLocaleString("fr-FR"):"",alerts(g).join(" | ")]));
+  const ta=document.createElement("textarea"); ta.value=rows.map(r=>r.join("\t")).join("\n"); ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta);
+  copyText(ta.value,$("#copyMsg"),ta,"Tableau copié : collez-le dans un tableur (Excel, LibreOffice) ou dans un document.");
+  setTimeout(()=>ta.remove(),1000);
+};
+
+/* ---------- guide des séances ---------- */
+function renderGuide(){
+  let h=`<h3>Mise en place</h3><ul>
+   <li><b>Partager le jeu</b> : depuis la page de l'artefact sur claude.ai, bouton de partage → lien public. Les élèves n'ont pas besoin de compte.</li>
+   <li><b>Séance 1</b> : chaque élève (ou binôme) crée sa partie avec son prénom et sa classe (ex. 1MCVA). Prénoms seulement, pas de nom de famille.</li>
+   <li><b>À la fin de chaque séance</b> : l'élève copie son <b>code de sauvegarde</b> et vous l'envoie (messagerie de l'ENT, Pronote…). Il le garde aussi : il lui servira à reprendre sur n'importe quel ordinateur (sur le même ordinateur, la partie est aussi gardée automatiquement).</li>
+   <li><b>Tableau de bord</b> : collez les codes reçus (plusieurs à la fois si vous voulez) → suivi de la classe, alertes, réponses écrites. Un code plus récent met à jour l'élève.</li>
+   <li><b>Clés</b> : chaque monde (sauf le 1er) s'ouvre avec une clé que vous donnez au début de la séance. Les élèves avancent ainsi au rythme de la classe.</li>
+   <li><b>Différenciation</b> : la difficulté (Facile / Normal / Expert) se choisit à chaque monde ; vous pouvez l'imposer.</li>
+   <li><b>Alertes</b> : ⚡ salle faite en moins d'une minute, 🎲 beaucoup d'erreurs (réponses au hasard ?), 💀 plusieurs réapparitions, 📝 réponses de défi très courtes. Ce sont des indices, pas des preuves : vérifiez dans le détail.</li>
+   <li><b>Code court / code complet</b> : le code court (ex. INES.1MCVA.K7Q2-9MXD) contient la progression, le temps, les erreurs et les alertes de chaque monde. Il ne contient pas les réponses écrites, qui restent dans le carnet de l'élève. Pour les lire à distance, demandez le <b>code complet</b> (bouton « Code complet » sous le code court), par exemple à la fin du Monde 5 pour récupérer le projet.</li>
+   <li><b>Reprise sur un autre ordinateur</b> : avec le code court, la progression est retrouvée, mais pas les réponses écrites des séances précédentes. Avec le code complet, tout est retrouvé. Sur le même ordinateur, rien n'est perdu.</li>
+   <li><b>Limite à connaître</b> : un code modifié ou mal recopié est refusé, mais un élève peut donner son code à un camarade. Les réponses écrites aux défis permettent de repérer les copies.</li></ul>
+   <h3>Progression : 5 séances de 50 à 55 min</h3><table><tr><th>Séance</th><th>Clé</th><th>Objectifs</th><th>Salles</th><th>Débrief (10 min)</th></tr>`;
+  WORLDS.forEach(w=>{ h+=`<tr><td><b>${w.n}. ${w.name}</b><br>${w.sub}</td><td class="px" style="font-size:10px">${w.key||"aucune"}</td><td>${esc(w.obj)}</td><td>${w.rooms.map(r=>ROOMS[r].theme).join("<br>")}</td><td><ul>${w.debrief.map(d=>`<li>${esc(d)}</li>`).join("")}</ul></td></tr>`; });
+  h+=`</table><h3>Le chemin de l'élève</h3><p class="small">Au départ, l'élève indique ce qu'il envisage après le bac (études, vie active, alternance, ou « je ne sais pas »). La Boussole (Monde 1, 14 questions) donne un score pour chaque chemin et des points à creuser ; l'élève garde son choix ou suit la Boussole. Le chemin personnalise le carnet de bord, les prochaines étapes conseillées et le projet final. <b>Tous les élèves jouent les 5 mondes</b> : connaître toutes les possibilités fait partie de l'objectif.</p>
+   <p class="small">Dates Parcoursup indicatives : vérifiez le calendrier de l'année sur parcoursup.gouv.fr.</p>`;
+  $("#tGuide").innerHTML=h;
+}
+function renderAnswers(){
+  let h=`<p class="small">Les questions sont tirées au hasard à chaque partie. Mots des coffres : ${WORLDS.map(w=>`M${w.n} <b>${w.word}</b>`).join(" · ")}. La Grande Épreuve (Monde 5) mélange des questions des salles Métiers, Entretien, BTS, Formations et Contrats.</p>`;
+  WORLDS.forEach(w=>{ h+=`<h3 style="margin-top:18px">MONDE ${w.n} · ${w.name}</h3>`;
+    w.rooms.forEach(k=>{ const R=ROOMS[k]; h+=`<h3 style="font-size:11px">${R.name} – ${R.theme}</h3>`;
+      if(R.type==="boussole"){ h+=`<p class="small">Pas de bonne réponse. Chaque réponse ajoute des points aux chemins ; le score est exprimé en % du maximum possible. Points à creuser : ${Object.values(FLAGS).map(esc).join(" · ")}</p>`; }
+      else if(R.type==="form"){ h+=`<p class="small">Formulaire de projet : plan A (type + précision), plan B, 3 actions datées, personne ressource. Tous les champs doivent être remplis.</p>`; }
+      else if(R.boss){ h+=`<p class="small">Questions générées à partir des autres salles (voir leurs réponses).</p>`; }
+      else { h+=`<table>`;
+        if(R.type==="match"||R.type==="bucket") R.items.forEach(it=>h+=`<tr><td>${esc(it[0])}</td><td><b>${esc(it[1])}</b></td></tr>`);
+        if(R.type==="quiz") R.items.forEach(it=>h+=`<tr><td>${esc(it[0])}</td><td><b>${esc(it[1][it[2]])}</b>${it[3]?`<br><i>→ ${esc(it[3])}</i>`:""}</td></tr>`);
+        if(R.type==="order") R.items.forEach((it,i)=>h+=`<tr><td>${i+1}</td><td>${esc(it[0])}${i===0||i===8?" <i>(Expert)</i>":i>=6?" <i>(Normal et Expert)</i>":""}</td></tr>`);
+        if(R.type==="tf") (R.pool||R.items).forEach(it=>h+=`<tr><td>${esc(it[0])}</td><td><b>${it[1]?"VRAI":"FAUX"}</b></td></tr>`);
+        h+=`</table>`; }
+      h+=`<p class="small">Défi solo : ${esc(R.solo)}<br>Défi binôme : ${esc(R.duo)}<br>📱 ${esc(R.mission)}</p>`;
+    });
+  });
+  $("#tAns").innerHTML=h;
+}
+
+</script>
+</body>
+</html>
